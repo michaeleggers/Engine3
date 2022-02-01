@@ -12,6 +12,8 @@
 #include <assert.h>
 #include <wchar.h>
 
+#include <SDL.h>
+
 #include "interface.h"
 #include "cengine_service.h"
 
@@ -83,7 +85,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     IEngineService * engineService = new CEngineService("../game/");
    
     /* Load the GameDLL */
-    HMODULE GameDLL = LoadLibrary(L"game.dll");
+    //HMODULE GameDLL = LoadLibrary(L"game.dll");
+	void * GameDLL = SDL_LoadObject("game.dll");
 	if (!GameDLL) 
 	{
 		MessageBoxA(hwnd, "Failed to load game.dll!", "OH NO!!!", MB_OK | MB_ICONEXCLAMATION);
@@ -91,7 +94,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 		// TODO: Do a proper shutdown of all the submodules
 	}
  
-    PFN_GET_GAME_CLIENT GetGameClient = (PFN_GET_GAME_CLIENT)GetProcAddress(GameDLL, "GetGameClient");
+    //PFN_GET_GAME_CLIENT GetGameClient = (PFN_GET_GAME_CLIENT)GetProcAddress(GameDLL, "GetGameClient");
+	PFN_GET_GAME_CLIENT GetGameClient = (PFN_GET_GAME_CLIENT)SDL_LoadFunction(GameDLL, "GetGameClient");
     assert(GetGameClient != NULL && "Failed to load GetGameClient func!");
 
     /* Get GameClient Implementation from GameDLL */

@@ -15,4 +15,6 @@ target_include_directories(Engine3
 )
 
 target_link_libraries(Engine3
-	PUBLIC vkal)
+	PUBLIC vkal
+	PUBLIC SDL2
+	PUBLIC SDL2main)
