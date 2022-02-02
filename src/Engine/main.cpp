@@ -14,6 +14,9 @@
 #include "interface.h"
 #include "cengine_service.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+
 
 
 int main(int argc, char** argv)
@@ -36,6 +39,27 @@ int main(int argc, char** argv)
             NULL);
         exit(-1); // TODO: Log this?
     }
+
+    // Window Icon
+    char * basePath = SDL_GetBasePath();
+    printf("%s\n", basePath);
+    std::string iconPath = std::string(basePath) + "icon.png";
+    int iconWidth      = 0;
+    int iconHeight     = 0;
+    int iconComponents = 0;
+    unsigned char * iconPixels = stbi_load(iconPath.c_str(),
+        &iconWidth, &iconHeight, 
+        &iconComponents, 4
+    );
+    SDL_Surface* iconSurface = SDL_CreateRGBSurfaceFrom(
+        iconPixels,
+        iconWidth, iconHeight,
+        4 * 8, // RGBA = 32bit
+        4 * iconWidth,
+        0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
+    SDL_SetWindowIcon(window, iconSurface);
+    SDL_FreeSurface(iconSurface);
+    stbi_image_free(iconPixels);
 
     // Load Game DLL/.so on nix. TODO: Check if Linux or Win
     void * gameDLL = SDL_LoadObject("game.dll"); // Linux "game.so"
