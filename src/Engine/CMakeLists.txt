@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 project(Engine3 VERSION 1.0)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../dependencies/vkal)
-add_executable(Engine3 WIN32
+add_executable(Engine3
 	cengine_service.cpp
 	cengine_service.h
 	interface.h
