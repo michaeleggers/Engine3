@@ -26,7 +26,7 @@ int main(int argc, char** argv)
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
         800, 600,
-        SDL_WINDOW_VULKAN
+        SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE
     );
 
     if (!window) {
@@ -47,6 +47,22 @@ int main(int argc, char** argv)
         exit(-1); // TODO: Log this?
     }
 
+    // Load function from game.dll that gets the GameClient
+    PFN_GET_GAME_CLIENT GetGameClient = (PFN_GET_GAME_CLIENT)SDL_LoadFunction(gameDLL, "GetGameClient");
+    if (!GetGameClient) {
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,
+            "FUCK!",
+            "SDL: Could not load function 'GetGameClient' from game.dll!",
+            NULL);
+        exit(-1); // TODO: Log this?
+    }
+
+    // Init Engine system(s)
+    IEngineService * engineService = new CEngineService("../game/");
+    IGameClient * gameClient = GetGameClient(engineService);
+
+    gameClient->OnEngineInitialized();
+
     // Loop
     bool running = true;
     while (running) {
@@ -61,6 +77,8 @@ int main(int argc, char** argv)
         {
             case (SDL_SCANCODE_ESCAPE): { running = false; } break;
         }
+        
+        gameClient->Update();
 
     }
 
