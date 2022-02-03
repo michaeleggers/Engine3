@@ -1,10 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(Engine3 VERSION 1.0)
 
-file(GLOB_RECURSE SRC_FILES LIST_DIRECTORIES false RELATIVE
-     ${CMAKE_CURRENT_SOURCE_DIR} *.c??)
-file(GLOB_RECURSE HEADER_FILES LIST_DIRECTORIES false RELATIVE
-     ${CMAKE_CURRENT_SOURCE_DIR} *.h)    
+ADD_SRC_HEADER_FILES()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../dependencies/vkal)
 add_executable(Engine3
