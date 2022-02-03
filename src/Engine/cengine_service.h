@@ -3,6 +3,7 @@
 
 #include <wchar.h>
 #include <string>
+#include <vector>
 
 #include "interface.h"
 #include "platform.h"
@@ -19,9 +20,12 @@ public:
     ~CEngineService() {}
     
     void						DebugOut(wchar_t const * str);
+	Player *					CreatePlayer(glm::vec3 startPos, std::string model);
 
     std::string					m_ExePath;
 	std::string					m_RelGamePath;
+	std::vector<Player>         m_Players;
+
 };
 
 #endif

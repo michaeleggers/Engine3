@@ -2,15 +2,18 @@
 #define _INTERFACE_H_
 
 #include <stdint.h>
+#include <string>
 
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 
+#include "player.h"
 
 class IEngineService
 {
 public:
     virtual void		DebugOut(wchar_t const * str)    = 0;
+    virtual Player*     CreatePlayer(glm::vec3 startPos, std::string model) = 0;
 };
 
 // GameDLL must implement this, so the engine can call into

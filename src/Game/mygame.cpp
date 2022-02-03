@@ -9,6 +9,36 @@
 
 #include <string>
 
+#include "player.h"
+
+/* 
+ What do I need ?
+
+ - Pickups: Player walks over it and gets it (health, weapon, etc...)
+ - Triggers: (invisible) geometry that triggers an action (open a door, move the elevator).
+ - Player:  Controllable player
+            Do not think about what part of the engine really is in control and how to
+            'architect' the code. I can sort this out once I have a running thing going!
+            Just let both game-code and engine see the player struct. DO NOT ABSTRACT! JUST BUILD WHAT I NEED!
+ - Enemies: Run around, shoot, follow the player, ...
+ - World: Static geometry (walls). Areas that hurt the player (lava) but are static.
+ - World: Special geometry (doors, elevators)
+ - Collisions: Collide Player <-> Enemies <-> World <-> Pickups <-> Triggers
+               First: do it the naive way (no BSP, Octree, ...).
+ - Camera:   FPS camera: that 'follows' the player.
+             Debug camera: Fly around in the world.
+ - Renderer: let the engine do the rendering. Game code just specifies all the entities (pickups, world, player, enemies, ...)
+             and renderer sorts out what has to be done.
+ - Load world, enemies, player-start-pos, etc. from file. For now create them manually.
+
+ - Engine should keep track of all the stuff in the game.
+
+ - CONCERNS:
+    - Raw Pointers: not quite sure if I should return a pointer to the game for e.g. the Player.
+      what if the pointer gets invalidated? A handle would solve this problem: I could first check
+      if the pointer behind the handle actually is valid and only then return it. I'll see if it bites me :)
+
+*/
 
 
 class MyGame : public IGameClient
@@ -35,17 +65,23 @@ void MyGame::OnEngineInitialized(void)
 {
     printf("FROM GAME DLL: Engine Initialized! Ready to GO!\n");
     engineService->DebugOut(L"From MyGame: Hellohoooo");
+
+    Player * player = engineService->CreatePlayer(glm::vec3(0), "models/player.model");
+    
 }
 
 void MyGame::Update(void)
 {
+    // handle input
 
+    
 }
 
 // TODO: Functions for setting render specific stuff such as resolution, bit-depth, and so on. (check lithtech/irrlicht).
 
 void MyGame::Render(void)
 {
+    //renderer->drawFrame(camera, other things);
 
 }
 
