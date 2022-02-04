@@ -39,7 +39,7 @@
       if the pointer behind the handle actually is valid and only then return it. I'll see if it bites me :)
 
     - STL-Strings: sstream and string and ifstream etc. seem all very stupid. For now they work.
-      Replace them later when actually things are running.
+      Replace them later when actually things are running. Actually C-Libs fread seems to be ok(?), like I did it in VKAL's platform layer.
 
  - Some conclusions:
    -> It is more important to get things up and running quickly. Code is garbage anyway!

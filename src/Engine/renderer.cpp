@@ -13,6 +13,8 @@ AnimatedModel Renderer::RegisterModel(std::string model)
 {
 	AnimatedModel animModel = {};
 
+	// figure out extension (.gpmesh is json, later: binary format)
+
 	// CPP Streams, urgh. Pretty stupid! TODO: replace later
 	std::ifstream modelFile;
 	std::stringstream ss;
@@ -21,6 +23,8 @@ AnimatedModel Renderer::RegisterModel(std::string model)
 	std::string data = ss.str();
 	SDL_Log("%s\n", data.c_str());
 	modelFile.close();
+
+	// Parse the json
 
 	return animModel;
 
