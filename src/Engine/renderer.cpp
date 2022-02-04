@@ -74,6 +74,21 @@ AnimatedModel Renderer::RegisterModel(std::string model)
 		}		
 	}
 
+	// Indices
+	rapidjson::Value& faceArray = doc["indices"];
+	assert(faceArray.IsArray());
+	rapidjson::SizeType faceCount = faceArray.Size();
+	rapidjson::SizeType indexCount = faceCount * 3; // Assume each face is a triangle!
+	std::vector<uint16_t> indices;
+	for (rapidjson::SizeType i = 0; i < faceCount; i++) {
+		rapidjson::Value& currentFace = faceArray[i];
+		for (rapidjson::SizeType j = 0; j < 3; j++) {
+			indices.push_back(currentFace[j].GetInt());
+		}
+	}
+
+
+
 	return animModel;
 }
 
