@@ -13,6 +13,7 @@
 
 #include "interface.h"
 #include "cengine_service.h"
+#include "renderer.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -82,7 +83,8 @@ int main(int argc, char** argv)
     }
 
     // Init Engine system(s)
-    IEngineService * engineService = new CEngineService("../game/");
+    Renderer* renderer = new Renderer();
+    IEngineService * engineService = new CEngineService("../data/", renderer);
     IGameClient * gameClient = GetGameClient(engineService);
 
     gameClient->OnEngineInitialized();
@@ -106,13 +108,13 @@ int main(int argc, char** argv)
 
     }
 
+    delete renderer;
+
     SDL_DestroyWindow(window);
     SDL_Quit();
 
     return 0;
 }
-
-
 
 
 

@@ -20,7 +20,8 @@ Player * CEngineService::CreatePlayer(glm::vec3 startPos, std::string model)
     
 
     // Register Model. Model also contains texture info
-    //AnimatedModel animModel = renderer->RegisterModel(model);
+    std::string modelFilePath = m_ExePath + m_relAssetPath + model;
+    AnimatedModel animModel = m_Renderer->RegisterModel(modelFilePath);
     
     m_Players.push_back(player);
 

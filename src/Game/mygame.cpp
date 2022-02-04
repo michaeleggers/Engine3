@@ -38,6 +38,13 @@
       what if the pointer gets invalidated? A handle would solve this problem: I could first check
       if the pointer behind the handle actually is valid and only then return it. I'll see if it bites me :)
 
+    - STL-Strings: sstream and string and ifstream etc. seem all very stupid. For now they work.
+      Replace them later when actually things are running.
+
+ - Some conclusions:
+   -> It is more important to get things up and running quickly. Code is garbage anyway!
+      Abstract away stuff like 'ReadFromFile' and then replace its implementation with something sane and not STL.
+
 */
 
 
@@ -66,7 +73,7 @@ void MyGame::OnEngineInitialized(void)
     printf("FROM GAME DLL: Engine Initialized! Ready to GO!\n");
     engineService->DebugOut(L"From MyGame: Hellohoooo");
 
-    Player * player = engineService->CreatePlayer(glm::vec3(0), "models/player.model");
+    Player * player = engineService->CreatePlayer(glm::vec3(0), "models/policeman.gpmesh");
     
 }
 
