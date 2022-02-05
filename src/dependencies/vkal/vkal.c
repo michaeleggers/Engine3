@@ -36,7 +36,7 @@ VkalInfo * vkal_init(char ** extensions, uint32_t extension_count)
 	#elif defined (VKAL_WIN32)
 			vkSetDebugUtilsObjectName = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(vkal_info.instance, "vkSetDebugUtilsObjectNameEXT");
 	#elif defined (VKAL_SDL)
-			vkSetDebugUtilsObjectName = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(vkal_info.instance, "vkSetDebugUtilsObjectNameEXT");
+			//vkSetDebugUtilsObjectName = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(vkal_info.instance, "vkSetDebugUtilsObjectNameEXT");
 	#endif
 
 	#ifdef __cplusplus
@@ -1163,7 +1163,7 @@ VkalTexture vkal_create_texture(
 void create_staging_buffer(uint32_t size) 
 {
     vkal_info.staging_buffer = create_buffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
-	VKAL_DBG_BUFFER_NAME(vkal_info.device, vkal_info.staging_buffer, "Default Staging Buffer");
+	//VKAL_DBG_BUFFER_NAME(vkal_info.device, vkal_info.staging_buffer, "Default Staging Buffer");
     // Allocate staging buffer memory
     VkMemoryRequirements buffer_memory_requirements = { 0 };
     vkGetBufferMemoryRequirements(vkal_info.device, vkal_info.staging_buffer.buffer, &buffer_memory_requirements);
@@ -2717,7 +2717,7 @@ void allocate_default_device_memory_index(void)
 void create_default_uniform_buffer(uint32_t size)
 {
     vkal_info.default_uniform_buffer = create_buffer(size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
-	VKAL_DBG_BUFFER_NAME(vkal_info.device, vkal_info.default_uniform_buffer, "Default Uniform Buffer");
+	//VKAL_DBG_BUFFER_NAME(vkal_info.device, vkal_info.default_uniform_buffer, "Default Uniform Buffer");
 }
 
 void vkal_update_uniform(UniformBuffer * uniform_buffer, void * data) // TODO: Does uniform_buffer really have to be a pointer?
@@ -2823,14 +2823,14 @@ void create_default_vertex_buffer(uint32_t size)
 {
     vkal_info.default_vertex_buffer = create_buffer(size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
     vkal_info.default_vertex_buffer_offset = 0;
-	VKAL_DBG_BUFFER_NAME(vkal_info.device, vkal_info.default_vertex_buffer, "Default Vertex Buffer");
+	//VKAL_DBG_BUFFER_NAME(vkal_info.device, vkal_info.default_vertex_buffer, "Default Vertex Buffer");
 }
 
 void create_default_index_buffer(uint32_t size)
 {
     vkal_info.default_index_buffer = create_buffer(size, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
     vkal_info.default_index_buffer_offset = 0;
-	VKAL_DBG_BUFFER_NAME(vkal_info.device, vkal_info.default_index_buffer, "Default Index Buffer");
+	//VKAL_DBG_BUFFER_NAME(vkal_info.device, vkal_info.default_index_buffer, "Default Index Buffer");
 }
 
 void flush_to_memory(VkDeviceMemory device_memory, void * dst_memory, void * src_memory, uint32_t size, uint32_t offset)

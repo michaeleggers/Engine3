@@ -4,7 +4,9 @@
 #include <string>
 #include <stdint.h>
 
+#include <SDL.h>
 #include <glm/glm.hpp>
+#include <vkal.h>
 
 #include "player.h"
 
@@ -30,8 +32,12 @@ struct VertexFormatAnimatedModel
 class Renderer 
 {
 public:
-	Renderer() {};
-	AnimatedModel RegisterModel(std::string model);
+	Renderer() {}
+
+	void			Init(SDL_Window* window);
+	AnimatedModel	RegisterModel(std::string model);
+
+	VkalInfo*		m_VkalInfo;
 };
 
 #endif

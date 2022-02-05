@@ -9,9 +9,50 @@
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
 
+#include <vkal.h>
+
 #include "platform.h"
 #include "renderer.h"
 #include "player.h"
+
+void Renderer::Init(SDL_Window * window)
+{
+	char* device_extensions[] = {
+	VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+	VK_KHR_MAINTENANCE3_EXTENSION_NAME
+	};
+	uint32_t device_extension_count = sizeof(device_extensions) / sizeof(*device_extensions);
+
+	char* instance_extensions[] = {
+	VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME
+#ifdef _DEBUG
+	,VK_EXT_DEBUG_UTILS_EXTENSION_NAME
+#endif
+	};
+	uint32_t instance_extension_count = sizeof(instance_extensions) / sizeof(*instance_extensions);
+
+	char* instance_layers[] = {
+		"VK_LAYER_KHRONOS_validation",
+		"VK_LAYER_LUNARG_monitor"
+	};
+	uint32_t instance_layer_count = 0;
+#ifdef _DEBUG
+	instance_layer_count = sizeof(instance_layers) / sizeof(*instance_layers);
+#endif
+
+	vkal_create_instance_sdl(window, instance_extensions, instance_extension_count, instance_layers, instance_layer_count);
+
+	VkalPhysicalDevice* devices = 0;
+	uint32_t device_count;
+	vkal_find_suitable_devices(device_extensions, device_extension_count, &devices, &device_count);
+	assert(device_count > 0);
+	printf("Suitable Devices:\n");
+	for (uint32_t i = 0; i < device_count; ++i) {
+		printf("    Phyiscal Device %d: %s\n", i, devices[i].property.deviceName);
+	}
+	vkal_select_physical_device(&devices[0]);
+	m_VkalInfo = vkal_init(device_extensions, device_extension_count);
+}
 
 AnimatedModel Renderer::RegisterModel(std::string model)
 {
@@ -87,8 +128,8 @@ AnimatedModel Renderer::RegisterModel(std::string model)
 		}
 	}
 
-
+	uint64_t vertexOffset = vkal_vertex_buffer_add(&vertices[0], sizeof(VertexFormatAnimatedModel), vertexCount);
+	uint64_t indexOffset = vkal_index_buffer_add(&indices[0], indexCount); // VKAL's default index buffer expects uint16_t!
 
 	return animModel;
 }
-

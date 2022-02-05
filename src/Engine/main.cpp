@@ -84,9 +84,11 @@ int main(int argc, char** argv)
 
     // Init Engine system(s)
     Renderer* renderer = new Renderer();
+    renderer->Init(window);
     IEngineService * engineService = new CEngineService("../data/", renderer);
     IGameClient * gameClient = GetGameClient(engineService);
 
+    // Tell client that engine is ready.
     gameClient->OnEngineInitialized();
 
     // Loop

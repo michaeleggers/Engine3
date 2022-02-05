@@ -67,11 +67,11 @@
 extern "C" {
 #endif
 
-#ifdef _DEBUG
-	PFN_vkSetDebugUtilsObjectNameEXT                       vkSetDebugUtilsObjectName;
-#endif 
+//#ifdef _DEBUG
+//	PFN_vkSetDebugUtilsObjectNameEXT                       vkSetDebugUtilsObjectName;
+//#endif 
 
-#if _DEBUG																	
+/*#if _DEBUG																	
 #define VKAL_DBG_BUFFER_NAME(vkal_info_macro, vkal_buffer, macro_name) 												\
 		{																												\
 		VkDebugUtilsObjectNameInfoEXT obj_info;																			\
@@ -96,7 +96,7 @@ extern "C" {
 #else
 	#define VKAL_DBG_BUFFER_NAME(vkal_info_macro, vkal_buffer, macro_name)
 	#define VKAL_DBG_IMAGE_NAME(vkal_info_macro, vkal_dbg_image_macro, name)
-#endif																					
+#endif	*/																				
 
 #ifdef __cplusplus
 }
