@@ -54,6 +54,11 @@ void Renderer::Init(SDL_Window * window)
 	m_VkalInfo = vkal_init(device_extensions, device_extension_count);
 }
 
+void Renderer::CreateAnimatedModelPipeline(void)
+{
+
+}
+
 AnimatedModel Renderer::RegisterModel(std::string model)
 {
 	AnimatedModel animModel = {};

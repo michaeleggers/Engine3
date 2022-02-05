@@ -35,9 +35,11 @@ public:
 	Renderer() {}
 
 	void			Init(SDL_Window* window);
+	void			CreateAnimatedModelPipeline(void);
 	AnimatedModel	RegisterModel(std::string model);
 
 	VkalInfo*		m_VkalInfo;
+	VkPipeline      m_animatedModelPipeline;
 };
 
 #endif

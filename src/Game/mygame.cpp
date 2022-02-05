@@ -33,6 +33,7 @@
 
  - Engine should keep track of all the stuff in the game.
 
+
  - CONCERNS:
     - Raw Pointers: not quite sure if I should return a pointer to the game for e.g. the Player.
       what if the pointer gets invalidated? A handle would solve this problem: I could first check
@@ -40,6 +41,14 @@
 
     - STL-Strings: sstream and string and ifstream etc. seem all very stupid. For now they work.
       Replace them later when actually things are running. Actually C-Libs fread seems to be ok(?), like I did it in VKAL's platform layer.
+
+    - Pipeline creation: At the moment I create the pipeline within the renderer. But maybe it should be made more flexible later
+      by just providing the function to create the pipeline. The function's input would just be the data, e.g. shader, descriptors, etc.
+
+
+ - TODOs/Questions:
+    - How to compile shaders during comp-time?
+
 
  - Some conclusions:
    -> It is more important to get things up and running quickly. Code is garbage anyway!
