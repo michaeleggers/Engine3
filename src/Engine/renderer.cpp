@@ -18,15 +18,15 @@
 void Renderer::Init(SDL_Window * window)
 {
 	char* device_extensions[] = {
-	VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-	VK_KHR_MAINTENANCE3_EXTENSION_NAME
+		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+		VK_KHR_MAINTENANCE3_EXTENSION_NAME
 	};
 	uint32_t device_extension_count = sizeof(device_extensions) / sizeof(*device_extensions);
 
 	char* instance_extensions[] = {
-	VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME
+		VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME
 #ifdef _DEBUG
-	,VK_EXT_DEBUG_UTILS_EXTENSION_NAME
+		,VK_EXT_DEBUG_UTILS_EXTENSION_NAME
 #endif
 	};
 	uint32_t instance_extension_count = sizeof(instance_extensions) / sizeof(*instance_extensions);
@@ -46,17 +46,51 @@ void Renderer::Init(SDL_Window * window)
 	uint32_t device_count;
 	vkal_find_suitable_devices(device_extensions, device_extension_count, &devices, &device_count);
 	assert(device_count > 0);
-	printf("Suitable Devices:\n");
+	SDL_Log("Suitable Devices:\n");
 	for (uint32_t i = 0; i < device_count; ++i) {
-		printf("    Phyiscal Device %d: %s\n", i, devices[i].property.deviceName);
+		SDL_Log("    Phyiscal Device %d: %s\n", i, devices[i].property.deviceName);
 	}
 	vkal_select_physical_device(&devices[0]);
 	m_VkalInfo = vkal_init(device_extensions, device_extension_count);
 }
 
-void Renderer::CreateAnimatedModelPipeline(void)
+void Renderer::CreateAnimatedModelPipeline(std::string vertShaderFile, std::string fragShaderFile)
 {
+	/* Load Shader code */
+	std::ifstream vertShaderStream;
+	std::stringstream ss;
+	vertShaderStream.open(vertShaderFile, std::ofstream::in);
+	ss << vertShaderStream.rdbuf();
+	std::string data = ss.str();
+	vertShaderStream.close();
 
+	/* Setup Vertex Layout */
+	VkVertexInputBindingDescription vertex_input_bindings[] =
+	{
+		{ 
+			0, 
+			2*sizeof(glm::vec3)			// Position, Normal
+			+ 2*4*sizeof(glm::uint)		// Bone Idx, Bone Weight, 4 uint8 each
+			+ sizeof(glm::vec2),        // UV
+			VK_VERTEX_INPUT_RATE_VERTEX 
+		}
+	};
+
+	VkVertexInputAttributeDescription vertex_attributes[] =
+	{
+		{ 0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0 },										// Position
+		{ 1, 0, VK_FORMAT_R32G32B32_SFLOAT, sizeof(glm::vec3) },						// Normal
+		{ 2, 0, VK_FORMAT_B8G8R8A8_UINT, 2*sizeof(glm::vec3) },							// Bone Idx
+		{ 3, 0, VK_FORMAT_B8G8R8A8_UINT, 2*sizeof(glm::vec3) + 4*sizeof(glm::uint)},	// Bone Weight
+		{ 4, 0, VK_FORMAT_R32G32_SFLOAT, 2*sizeof(glm::vec3) + 2*4*sizeof(glm::uint)}	// UV 
+	};
+	uint32_t vertex_attribute_count = sizeof(vertex_attributes) / sizeof(*vertex_attributes);
+
+
+
+	/* Descriptor Sets */
+
+	
 }
 
 AnimatedModel Renderer::RegisterModel(std::string model)

@@ -35,7 +35,7 @@ public:
 	Renderer() {}
 
 	void			Init(SDL_Window* window);
-	void			CreateAnimatedModelPipeline(void);
+	void			CreateAnimatedModelPipeline(std::string vertShaderFile, std::string fragShaderFile);
 	AnimatedModel	RegisterModel(std::string model);
 
 	VkalInfo*		m_VkalInfo;
