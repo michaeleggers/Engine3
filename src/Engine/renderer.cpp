@@ -56,6 +56,7 @@ void Renderer::Init(SDL_Window * window)
 
 static std::vector<uint8_t> loadBinaryFile(std::string file)
 {
+	// TODO: Use SDL_RWFromFile instead of stdio's FILE and fopen?
 	FILE* hFile = fopen(file.c_str(), "rb");
 	SDL_assert_always(hFile != NULL);
 	fseek(hFile, 0L, SEEK_END);
@@ -109,6 +110,18 @@ void Renderer::CreateAnimatedModelPipeline(std::string vertShaderFile, std::stri
 	
 }
 
+static std::string loadTextFile(std::string file)
+{
+	std::ifstream iFileStream;
+	std::stringstream ss;
+	iFileStream.open(file, std::ifstream::in);
+	ss << iFileStream.rdbuf();
+	std::string data = ss.str();
+	iFileStream.close();
+
+	return data;
+}
+
 AnimatedModel Renderer::RegisterModel(std::string model)
 {
 	AnimatedModel animModel = {};
@@ -116,12 +129,7 @@ AnimatedModel Renderer::RegisterModel(std::string model)
 	// figure out extension (.gpmesh is json, later: binary format)
 
 	// CPP Streams, urgh. TODO: replace later
-	std::ifstream modelFile;
-	std::stringstream ss;
-	modelFile.open(model, std::ifstream::in);
-	ss << modelFile.rdbuf();
-	std::string data = ss.str();
-	modelFile.close();
+	std::string data = loadTextFile(model);
 
 	// Parse the json
 	rapidjson::Document doc;
