@@ -32,7 +32,11 @@ struct VertexFormatAnimatedModel
 class Renderer 
 {
 public:
-	Renderer() {}
+	Renderer(std::string relAssetPath) 
+		: m_relAssetPath(relAssetPath)
+	{
+		m_ExePath = SDL_GetBasePath();
+	}
 
 	void			Init(SDL_Window* window);
 	void			CreateAnimatedModelPipeline(std::string vertShaderFile, std::string fragShaderFile);
@@ -40,6 +44,9 @@ public:
 
 	VkalInfo*		m_VkalInfo;
 	VkPipeline      m_animatedModelPipeline;
+
+	std::string		m_ExePath;
+	std::string		m_relAssetPath;
 };
 
 #endif

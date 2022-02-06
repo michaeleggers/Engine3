@@ -3,7 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
-
+#include <stdint.h>
 
 #include <SDL.h>
 #include <rapidjson/document.h>
@@ -54,15 +54,31 @@ void Renderer::Init(SDL_Window * window)
 	m_VkalInfo = vkal_init(device_extensions, device_extension_count);
 }
 
+static std::vector<uint8_t> loadBinaryFile(std::string file)
+{
+	FILE* hFile = fopen(file.c_str(), "rb");
+	SDL_assert_always(hFile != NULL);
+	fseek(hFile, 0L, SEEK_END);
+	size_t vertShaderSize = ftell(hFile);
+	fseek(hFile, 0L, SEEK_SET);
+	std::vector<uint8_t> data(vertShaderSize);
+	fread(&data[0], sizeof(char), vertShaderSize, hFile);
+	fclose(hFile);
+
+	return data;
+}
+
 void Renderer::CreateAnimatedModelPipeline(std::string vertShaderFile, std::string fragShaderFile)
 {
 	/* Load Shader code */
-	std::ifstream vertShaderStream;
-	std::stringstream ss;
-	vertShaderStream.open(vertShaderFile, std::ofstream::in);
-	ss << vertShaderStream.rdbuf();
-	std::string data = ss.str();
-	vertShaderStream.close();
+	std::vector<uint8_t> vertShader = loadBinaryFile(m_ExePath + m_relAssetPath + vertShaderFile);
+	std::vector<uint8_t> fragShader = loadBinaryFile(m_ExePath + m_relAssetPath + fragShaderFile);
+
+	// CPP streams are nuts?
+	//std::ifstream vertShaderStream;
+	//vertShaderStream.open(vertShaderFile, std::ifstream::in | std::ifstream::binary);
+	//uint8_t data = vertShaderStream.rdbuf();
+	//vertShaderStream.close();
 
 	/* Setup Vertex Layout */
 	VkVertexInputBindingDescription vertex_input_bindings[] =
@@ -102,7 +118,7 @@ AnimatedModel Renderer::RegisterModel(std::string model)
 	// CPP Streams, urgh. TODO: replace later
 	std::ifstream modelFile;
 	std::stringstream ss;
-	modelFile.open(model, std::ofstream::in);
+	modelFile.open(model, std::ifstream::in);
 	ss << modelFile.rdbuf();
 	std::string data = ss.str();
 	modelFile.close();

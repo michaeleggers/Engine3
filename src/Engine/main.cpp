@@ -83,8 +83,12 @@ int main(int argc, char** argv)
     }
 
     // Init Engine system(s)
-    Renderer* renderer = new Renderer();
+    Renderer* renderer = new Renderer("../data/");
     renderer->Init(window);
+
+    // TODO: Pipelinecreation somewhere else and more 'generic'?
+    renderer->CreateAnimatedModelPipeline("shaders/animatedModel_vert.spv", "shaders/animatedModel_frag.spv");
+    
     IEngineService * engineService = new CEngineService("../data/", renderer);
     IGameClient * gameClient = GetGameClient(engineService);
 
