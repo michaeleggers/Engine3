@@ -90,9 +90,9 @@ void Renderer::CreateAnimatedModelPipeline(std::string vertShaderFile, std::stri
 	{
 		{ 
 			0, 
-			2*sizeof(glm::vec3)			// Position, Normal
-			+ 2*4*sizeof(glm::uint)		// Bone Idx, Bone Weight, 4 uint8 each
-			+ sizeof(glm::vec2),        // UV
+			2*sizeof(glm::vec3),			// Position, Normal
+			//+ 2*4*sizeof(glm::uint)		// Bone Idx, Bone Weight, 4 uint8 each
+			//+ sizeof(glm::vec2),        // UV
 			VK_VERTEX_INPUT_RATE_VERTEX 
 		}
 	};
@@ -131,7 +131,7 @@ void Renderer::CreateAnimatedModelPipeline(std::string vertShaderFile, std::stri
 	}
 	
 	/* Pipeline */
-	VkPipelineLayout pipeline_layout = vkal_create_pipeline_layout(layouts, descriptor_set_layout_count, NULL, 0);
+	VkPipelineLayout pipeline_layout = vkal_create_pipeline_layout(NULL, 0, NULL, 0);
 	VkPipeline graphics_pipeline = vkal_create_graphics_pipeline(
 		vertex_input_bindings, 1,
 		vertex_attributes, vertex_attribute_count,
@@ -259,7 +259,7 @@ void Renderer::RenderFrame(std::vector<Player> players)
 			0, 0,
 			(float)width, (float)height);
 
-		vkal_bind_descriptor_set(image_id, &m_DescriptorSets[0], m_animatedModelLayout);
+		//vkal_bind_descriptor_set(image_id, &m_DescriptorSets[0], m_animatedModelLayout);
 		
 		vkal_draw_indexed(image_id, m_animatedModelPipeline,
 			player.animModel.indexOffset, player.animModel.indexCount,
