@@ -15,6 +15,7 @@ class IEngineService
 public:
     virtual void		DebugOut(wchar_t const * str)    = 0;
     virtual Player*     CreatePlayer(glm::vec3 startPos, std::string model) = 0;
+    virtual void        RenderFrame(void) = 0;
 };
 
 // GameDLL must implement this, so the engine can call into

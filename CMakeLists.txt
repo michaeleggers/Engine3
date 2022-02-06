@@ -27,4 +27,3 @@ add_subdirectory(src/Engine)
 add_subdirectory(src/Game)
 
 add_dependencies(Engine3 vkal)
-add_dependencies(Engine3 Game)

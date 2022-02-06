@@ -3,7 +3,11 @@ project(Engine3 VERSION 1.0)
 
 ADD_SRC_HEADER_FILES()
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../dependencies/vkal)
+include_directories(
+	${CMAKE_CURRENT_SOURCE_DIR}/../dependencies/vkal
+	${CMAKE_CURRENT_SOURCE_DIR}/../dependencies/SDL/include
+)
+
 add_executable(Engine3
 	${SRC_FILES}
 	${HEADER_FILES}

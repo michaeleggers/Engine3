@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 #include <SDL.h>
+//#include <SDL_vulkan.h>
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
 
@@ -52,6 +53,8 @@ void Renderer::Init(SDL_Window * window)
 	}
 	vkal_select_physical_device(&devices[0]);
 	m_VkalInfo = vkal_init(device_extensions, device_extension_count);
+
+	m_Window = window;
 }
 
 static std::vector<uint8_t> loadBinaryFile(std::string file)
@@ -74,6 +77,7 @@ void Renderer::CreateAnimatedModelPipeline(std::string vertShaderFile, std::stri
 	/* Load Shader code */
 	std::vector<uint8_t> vertShader = loadBinaryFile(m_ExePath + m_relAssetPath + vertShaderFile);
 	std::vector<uint8_t> fragShader = loadBinaryFile(m_ExePath + m_relAssetPath + fragShaderFile);
+	ShaderStageSetup shaderStageSetup = vkal_create_shaders(&vertShader[0], vertShader.size(), &fragShader[0], fragShader.size());
 
 	// CPP streams are nuts?
 	//std::ifstream vertShaderStream;
@@ -97,17 +101,48 @@ void Renderer::CreateAnimatedModelPipeline(std::string vertShaderFile, std::stri
 	{
 		{ 0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0 },										// Position
 		{ 1, 0, VK_FORMAT_R32G32B32_SFLOAT, sizeof(glm::vec3) },						// Normal
-		{ 2, 0, VK_FORMAT_B8G8R8A8_UINT, 2*sizeof(glm::vec3) },							// Bone Idx
-		{ 3, 0, VK_FORMAT_B8G8R8A8_UINT, 2*sizeof(glm::vec3) + 4*sizeof(glm::uint)},	// Bone Weight
-		{ 4, 0, VK_FORMAT_R32G32_SFLOAT, 2*sizeof(glm::vec3) + 2*4*sizeof(glm::uint)}	// UV 
+		//{ 2, 0, VK_FORMAT_B8G8R8A8_UINT, 2*sizeof(glm::vec3) },							// Bone Idx
+		//{ 3, 0, VK_FORMAT_B8G8R8A8_UINT, 2*sizeof(glm::vec3) + 4*sizeof(uint8_t)},	// Bone Weight
+		//{ 4, 0, VK_FORMAT_R32G32_SFLOAT, 2*sizeof(glm::vec3) + 2*4*sizeof(uint8_t)}	// UV 
 	};
 	uint32_t vertex_attribute_count = sizeof(vertex_attributes) / sizeof(*vertex_attributes);
 
+	/* Descriptor Sets TODO: define those outside this function? */
+	VkDescriptorSetLayoutBinding set_layout[] =
+	{
+		{
+			0,
+			VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+			1,
+			VK_SHADER_STAGE_VERTEX_BIT,
+			0
+		}
+	};
+	VkDescriptorSetLayout descriptor_set_layout = vkal_create_descriptor_set_layout(set_layout, 1);
 
-
-	/* Descriptor Sets */
-
+	VkDescriptorSetLayout layouts[] = {
+		descriptor_set_layout
+	};
+	uint32_t descriptor_set_layout_count = sizeof(layouts) / sizeof(*layouts);
+	VkDescriptorSet* descriptor_sets = (VkDescriptorSet*)malloc(descriptor_set_layout_count * sizeof(VkDescriptorSet));
+	vkal_allocate_descriptor_sets(m_VkalInfo->default_descriptor_pool, layouts, descriptor_set_layout_count, &descriptor_sets);
+	for (size_t i = 0; i < descriptor_set_layout_count; ++i) {
+		m_DescriptorSets.push_back(descriptor_sets[i]);
+	}
 	
+	/* Pipeline */
+	VkPipelineLayout pipeline_layout = vkal_create_pipeline_layout(layouts, descriptor_set_layout_count, NULL, 0);
+	VkPipeline graphics_pipeline = vkal_create_graphics_pipeline(
+		vertex_input_bindings, 1,
+		vertex_attributes, vertex_attribute_count,
+		shaderStageSetup, VK_TRUE, VK_COMPARE_OP_LESS_OR_EQUAL, VK_CULL_MODE_BACK_BIT, VK_POLYGON_MODE_FILL,
+		VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+		VK_FRONT_FACE_CLOCKWISE,
+		m_VkalInfo->render_pass, pipeline_layout);
+
+
+	m_animatedModelLayout   = pipeline_layout;
+	m_animatedModelPipeline = graphics_pipeline;
 }
 
 static std::string loadTextFile(std::string file)
@@ -163,18 +198,18 @@ AnimatedModel Renderer::RegisterModel(std::string model)
 			v->normal.y = currentVertex[4].GetFloat();
 			v->normal.z = currentVertex[5].GetFloat();
 
-			v->boneIdx0 = currentVertex[6].GetInt();
-			v->boneIdx1 = currentVertex[7].GetInt();
-			v->boneIdx2 = currentVertex[8].GetInt();
-			v->boneIdx3 = currentVertex[9].GetInt();
+			//v->boneIdx0 = currentVertex[6].GetInt();
+			//v->boneIdx1 = currentVertex[7].GetInt();
+			//v->boneIdx2 = currentVertex[8].GetInt();
+			//v->boneIdx3 = currentVertex[9].GetInt();
 
-			v->boneWeight0 = currentVertex[10].GetInt();
-			v->boneWeight1 = currentVertex[11].GetInt();
-			v->boneWeight2 = currentVertex[12].GetInt();
-			v->boneWeight3 = currentVertex[13].GetInt();
+			//v->boneWeight0 = currentVertex[10].GetInt();
+			//v->boneWeight1 = currentVertex[11].GetInt();
+			//v->boneWeight2 = currentVertex[12].GetInt();
+			//v->boneWeight3 = currentVertex[13].GetInt();
 
-			v->uv.x = currentVertex[14].GetFloat();
-			v->uv.y = currentVertex[15].GetFloat();
+			//v->uv.x = currentVertex[14].GetFloat();
+			//v->uv.y = currentVertex[15].GetFloat();
 		}		
 	}
 
@@ -191,8 +226,50 @@ AnimatedModel Renderer::RegisterModel(std::string model)
 		}
 	}
 
-	uint64_t vertexOffset = vkal_vertex_buffer_add(&vertices[0], sizeof(VertexFormatAnimatedModel), vertexCount);
-	uint64_t indexOffset = vkal_index_buffer_add(&indices[0], indexCount); // VKAL's default index buffer expects uint16_t!
-
+	animModel.vertexOffset = vkal_vertex_buffer_add(&vertices[0], sizeof(VertexFormatAnimatedModel), vertexCount);
+	animModel.indexOffset  = vkal_index_buffer_add(&indices[0], indexCount); // VKAL's default index buffer expects uint16_t!
+	animModel.indexCount   = indexCount;
+	animModel.pipeline	   = m_animatedModelPipeline;
+	animModel.pipelineLayout = m_animatedModelLayout;
 	return animModel;
+}
+
+// TODO: Renderer gets a refresh definition with all the stuff that needs to be done.
+//       For now just the player.
+void Renderer::RenderFrame(std::vector<Player> players)
+{
+	Player player = players[0]; // Just a test
+
+	int width, height;
+	SDL_GetWindowSize(m_Window, &width, &height);
+	{
+		//vkDeviceWaitIdle(vkal_info->device);
+		uint32_t image_id = vkal_get_image();
+
+		VkCommandBuffer currentCmdBuffer = m_VkalInfo->default_command_buffers[image_id];
+
+		vkal_set_clear_color({ 0.2f, 0.2f, 0.2f, 1.0f });
+
+		vkal_begin_command_buffer(image_id);
+		vkal_begin_render_pass(image_id, m_VkalInfo->render_pass);
+		vkal_viewport(currentCmdBuffer,
+			0, 0,
+			(float)width, (float)height);
+		vkal_scissor(currentCmdBuffer,
+			0, 0,
+			(float)width, (float)height);
+
+		vkal_bind_descriptor_set(image_id, &m_DescriptorSets[0], m_animatedModelLayout);
+		
+		vkal_draw_indexed(image_id, m_animatedModelPipeline,
+			player.animModel.indexOffset, player.animModel.indexCount,
+			player.animModel.vertexOffset);
+		
+		vkal_end_renderpass(image_id);
+		vkal_end_command_buffer(image_id);
+
+		vkal_queue_submit(&currentCmdBuffer, 1);
+
+		vkal_present(image_id);
+	}
 }

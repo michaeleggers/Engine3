@@ -25,13 +25,12 @@ public:
     
     void						DebugOut(wchar_t const * str);
 	Player *					CreatePlayer(glm::vec3 startPos, std::string model);
-
+	void						RenderFrame(void);
 
 	Renderer *					m_Renderer;
     std::string					m_ExePath;
 	std::string					m_relAssetPath;
 	std::vector<Player>         m_Players;
-
 };
 
 #endif

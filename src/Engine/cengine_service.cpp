@@ -17,13 +17,19 @@ void CEngineService::DebugOut(wchar_t const * str)
 Player * CEngineService::CreatePlayer(glm::vec3 startPos, std::string model)
 {
     Player player{};
-    
 
-    // Register Model. Model also contains texture info
+    // Register Model. This will upload vertex/index-data to GPU.
     std::string modelFilePath = m_ExePath + m_relAssetPath + model;
-    AnimatedModel animModel = m_Renderer->RegisterModel(modelFilePath);
+    AnimatedModel modelData = m_Renderer->RegisterModel(modelFilePath);
     
+    player.animModel = modelData;
+    player.modelName = model;
     m_Players.push_back(player);
 
     return &m_Players.back();
+}
+
+void CEngineService::RenderFrame(void)
+{
+    m_Renderer->RenderFrame(m_Players);
 }

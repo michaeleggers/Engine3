@@ -15,6 +15,7 @@
 #include "cengine_service.h"
 #include "renderer.h"
 
+
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
@@ -112,6 +113,7 @@ int main(int argc, char** argv)
         
         gameClient->Update();
 
+        engineService->RenderFrame();
     }
 
     delete renderer;

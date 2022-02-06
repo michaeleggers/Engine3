@@ -3,6 +3,11 @@ project(Game VERSION 1.0)
 
 ADD_SRC_HEADER_FILES()
 
+include_directories(
+	${CMAKE_CURRENT_SOURCE_DIR}/../dependencies/vkal
+	${CMAKE_CURRENT_SOURCE_DIR}/../dependencies/SDL/include
+)
+
 add_library(Game SHARED
 	${SRC_FILES}
 	${HEADER_FILES}
@@ -11,4 +16,8 @@ add_library(Game SHARED
 target_include_directories(Game
 	PUBLIC ../Engine
 	PUBLIC ../dependencies
+)
+
+target_link_libraries(Game
+	PUBLIC vkal
 )
