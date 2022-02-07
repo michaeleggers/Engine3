@@ -19,8 +19,7 @@ Player * CEngineService::CreatePlayer(glm::vec3 startPos, std::string model)
     Player player{};
 
     // Register Model. This will upload vertex/index-data to GPU.
-    std::string modelFilePath = m_ExePath + m_relAssetPath + model;
-    AnimatedModel modelData = m_Renderer->RegisterModel(modelFilePath);
+    AnimatedModel modelData = m_Renderer->RegisterModel(model);
     
     player.animModel = modelData;
     player.modelName = model;

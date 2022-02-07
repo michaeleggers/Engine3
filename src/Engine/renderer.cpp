@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <unordered_map>
 #include <stdint.h>
 
 #include <SDL.h>
@@ -159,12 +160,18 @@ static std::string loadTextFile(std::string file)
 
 AnimatedModel Renderer::RegisterModel(std::string model) // TODO: check if model already loaded
 {
+	std::unordered_map<std::string, AnimatedModel>::iterator got = m_AnimatedModels.find(model);
+	if (got != m_AnimatedModels.end()) {
+		return got->second;
+	}
+
 	AnimatedModel animModel = {};
 
 	// figure out extension (.gpmesh is json, later: binary format)
 
 	// CPP Streams, urgh. TODO: replace later
-	std::string data = loadTextFile(model);
+	std::string modelFilePath = m_ExePath + m_relAssetPath + model;
+	std::string data = loadTextFile(modelFilePath);
 
 	// Parse the json
 	rapidjson::Document doc;
@@ -231,6 +238,7 @@ AnimatedModel Renderer::RegisterModel(std::string model) // TODO: check if model
 	animModel.indexCount   = indexCount;
 	animModel.pipeline	   = m_animatedModelPipeline;
 	animModel.pipelineLayout = m_animatedModelLayout;
+
 	return animModel;
 }
 
@@ -238,8 +246,6 @@ AnimatedModel Renderer::RegisterModel(std::string model) // TODO: check if model
 //       For now just the player.
 void Renderer::RenderFrame(std::vector<Player> players)
 {
-	Player player = players[0]; // Just a test
-
 	int width, height;
 	SDL_GetWindowSize(m_Window, &width, &height);
 	{
@@ -260,10 +266,12 @@ void Renderer::RenderFrame(std::vector<Player> players)
 			(float)width, (float)height);
 
 		//vkal_bind_descriptor_set(image_id, &m_DescriptorSets[0], m_animatedModelLayout);
-		
-		vkal_draw_indexed(image_id, m_animatedModelPipeline,
-			player.animModel.indexOffset, player.animModel.indexCount,
-			player.animModel.vertexOffset);
+		for (int i = 0; i < players.size(); ++i) {
+			Player player = players[i];
+			vkal_draw_indexed(image_id, m_animatedModelPipeline,
+				player.animModel.indexOffset, player.animModel.indexCount,
+				player.animModel.vertexOffset);
+		}
 		
 		vkal_end_renderpass(image_id);
 		vkal_end_command_buffer(image_id);

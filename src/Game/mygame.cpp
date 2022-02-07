@@ -83,7 +83,8 @@ void MyGame::OnEngineInitialized(void)
     engineService->DebugOut(L"From MyGame: Hellohoooo");
 
     Player * player = engineService->CreatePlayer(glm::vec3(0), "models/policeman.gpmesh");
-    
+    Player* player2 = engineService->CreatePlayer(glm::vec3(0), "models/policeman.gpmesh");
+
 }
 
 void MyGame::Update(void)

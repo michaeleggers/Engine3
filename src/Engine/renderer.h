@@ -53,6 +53,8 @@ public:
 
 	std::string			m_ExePath;
 	std::string			m_relAssetPath;
+
+	std::unordered_map<std::string, AnimatedModel> m_AnimatedModels;
 };
 
 #endif
