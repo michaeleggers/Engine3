@@ -90,9 +90,9 @@ void Renderer::CreateAnimatedModelPipeline(std::string vertShaderFile, std::stri
 	{
 		{ 
 			0, 
-			2*sizeof(glm::vec3),			// Position, Normal
-			//+ 2*4*sizeof(glm::uint)		// Bone Idx, Bone Weight, 4 uint8 each
-			//+ sizeof(glm::vec2),        // UV
+			2*sizeof(glm::vec3)			// Position, Normal
+			+ 2*4*sizeof(uint8_t)		// Bone Indices, Bone Weights, 4 uint8 each
+			+ sizeof(glm::vec2),        // UV
 			VK_VERTEX_INPUT_RATE_VERTEX 
 		}
 	};
@@ -101,9 +101,9 @@ void Renderer::CreateAnimatedModelPipeline(std::string vertShaderFile, std::stri
 	{
 		{ 0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0 },										// Position
 		{ 1, 0, VK_FORMAT_R32G32B32_SFLOAT, sizeof(glm::vec3) },						// Normal
-		//{ 2, 0, VK_FORMAT_B8G8R8A8_UINT, 2*sizeof(glm::vec3) },							// Bone Idx
-		//{ 3, 0, VK_FORMAT_B8G8R8A8_UINT, 2*sizeof(glm::vec3) + 4*sizeof(uint8_t)},	// Bone Weight
-		//{ 4, 0, VK_FORMAT_R32G32_SFLOAT, 2*sizeof(glm::vec3) + 2*4*sizeof(uint8_t)}	// UV 
+		{ 2, 0, VK_FORMAT_R8G8B8A8_UINT, 2*sizeof(glm::vec3) },							// Bone Idx
+		{ 3, 0, VK_FORMAT_R8G8B8A8_UINT, 2*sizeof(glm::vec3) + 4*sizeof(uint8_t)},	// Bone Weight
+		{ 4, 0, VK_FORMAT_R32G32_SFLOAT, 2*sizeof(glm::vec3) + 2*4*sizeof(uint8_t)}	// UV 
 	};
 	uint32_t vertex_attribute_count = sizeof(vertex_attributes) / sizeof(*vertex_attributes);
 
@@ -157,7 +157,7 @@ static std::string loadTextFile(std::string file)
 	return data;
 }
 
-AnimatedModel Renderer::RegisterModel(std::string model)
+AnimatedModel Renderer::RegisterModel(std::string model) // TODO: check if model already loaded
 {
 	AnimatedModel animModel = {};
 
@@ -198,18 +198,18 @@ AnimatedModel Renderer::RegisterModel(std::string model)
 			v->normal.y = currentVertex[4].GetFloat();
 			v->normal.z = currentVertex[5].GetFloat();
 
-			//v->boneIdx0 = currentVertex[6].GetInt();
-			//v->boneIdx1 = currentVertex[7].GetInt();
-			//v->boneIdx2 = currentVertex[8].GetInt();
-			//v->boneIdx3 = currentVertex[9].GetInt();
+			v->boneIdx0 = currentVertex[6].GetInt();
+			v->boneIdx1 = currentVertex[7].GetInt();
+			v->boneIdx2 = currentVertex[8].GetInt();
+			v->boneIdx3 = currentVertex[9].GetInt();
 
-			//v->boneWeight0 = currentVertex[10].GetInt();
-			//v->boneWeight1 = currentVertex[11].GetInt();
-			//v->boneWeight2 = currentVertex[12].GetInt();
-			//v->boneWeight3 = currentVertex[13].GetInt();
+			v->boneWeight0 = currentVertex[10].GetInt();
+			v->boneWeight1 = currentVertex[11].GetInt();
+			v->boneWeight2 = currentVertex[12].GetInt();
+			v->boneWeight3 = currentVertex[13].GetInt();
 
-			//v->uv.x = currentVertex[14].GetFloat();
-			//v->uv.y = currentVertex[15].GetFloat();
+			v->uv.x = currentVertex[14].GetFloat();
+			v->uv.y = currentVertex[15].GetFloat();
 		}		
 	}
 
