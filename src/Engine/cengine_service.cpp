@@ -28,7 +28,13 @@ Player * CEngineService::CreatePlayer(glm::vec3 startPos, std::string model)
     return &m_Players.back();
 }
 
-void CEngineService::RenderFrame(void)
+Camera* CEngineService::CreateCamera(glm::vec3 pos)
+{
+    
+    return nullptr;
+}
+
+void CEngineService::RenderFrame()
 {
     m_Renderer->RenderFrame(m_Players);
 }

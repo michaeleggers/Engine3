@@ -10,6 +10,7 @@
 #include <string>
 
 #include "player.h"
+#include "camera.h"
 
 /* 
  What do I need ?
@@ -70,6 +71,8 @@ public:
 	// Game Specific
 	void Render(void);
 
+    Camera * m_Camera;
+
 };
 
 
@@ -84,7 +87,7 @@ void MyGame::OnEngineInitialized(void)
 
     Player * player = engineService->CreatePlayer(glm::vec3(0), "models/policeman.gpmesh");
     Player* player2 = engineService->CreatePlayer(glm::vec3(0), "models/policeman.gpmesh");
-
+    m_Camera = engineService->CreateCamera(glm::vec3(0));
 }
 
 void MyGame::Update(void)
@@ -98,6 +101,9 @@ void MyGame::Update(void)
 
 void MyGame::Render(void)
 {
+    // TODO: We need to call the RenderFrame function from the game. Otherwise it will
+    //       be way too difficult to let the game-logic decide what camer to use!!!!!
+    //       I'll do this tomorrow. Good night everyone!
     //renderer->drawFrame(camera, other things);
 
 }

@@ -10,6 +10,7 @@
 #include "interface.h"
 #include "platform.h"
 #include "renderer.h"
+#include "camera.h"
 
 class CEngineService : public IEngineService
 {
@@ -25,7 +26,8 @@ public:
     
     void						DebugOut(wchar_t const * str);
 	Player *					CreatePlayer(glm::vec3 startPos, std::string model);
-	void						RenderFrame(void);
+	Camera*						CreateCamera(glm::vec3 pos);
+	void						RenderFrame();
 
 	Renderer *					m_Renderer;
     std::string					m_ExePath;
