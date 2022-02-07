@@ -102,8 +102,8 @@ void Renderer::CreateAnimatedModelPipeline(std::string vertShaderFile, std::stri
 		{ 0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0 },										// Position
 		{ 1, 0, VK_FORMAT_R32G32B32_SFLOAT, sizeof(glm::vec3) },						// Normal
 		{ 2, 0, VK_FORMAT_R8G8B8A8_UINT, 2*sizeof(glm::vec3) },							// Bone Idx
-		{ 3, 0, VK_FORMAT_R8G8B8A8_UINT, 2*sizeof(glm::vec3) + 4*sizeof(uint8_t)},	// Bone Weight
-		{ 4, 0, VK_FORMAT_R32G32_SFLOAT, 2*sizeof(glm::vec3) + 2*4*sizeof(uint8_t)}	// UV 
+		{ 3, 0, VK_FORMAT_R8G8B8A8_UNORM, 2*sizeof(glm::vec3) + 4*sizeof(uint8_t)},		// Bone Weight, Setting the format to VK_FORMAT_R8G8B8A8_UNORM converts from 8bit integer to float [0.0 - 1.0]
+		{ 4, 0, VK_FORMAT_R32G32_SFLOAT, 2*sizeof(glm::vec3) + 2*4*sizeof(uint8_t)}		// UV 
 	};
 	uint32_t vertex_attribute_count = sizeof(vertex_attributes) / sizeof(*vertex_attributes);
 
