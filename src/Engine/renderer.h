@@ -10,6 +10,7 @@
 #include <vkal.h>
 
 #include "player.h"
+#include "camera.h"
 
 struct VertexFormatAnimatedModel 
 {
@@ -30,6 +31,12 @@ struct VertexFormatAnimatedModel
 	glm::vec2 uv;
 };
 
+struct ViewProj
+{
+	glm::mat4 viewMat;
+	glm::mat4 projMat;
+};
+
 class Renderer 
 {
 public:
@@ -42,7 +49,7 @@ public:
 	void			Init(SDL_Window* window);
 	void			CreateAnimatedModelPipeline(std::string vertShaderFile, std::string fragShaderFile);
 	AnimatedModel   RegisterModel(std::string model);
-	void			RenderFrame(std::vector<Player> players);
+	void			RenderFrame(std::vector<Player> players, Camera * camera);
 
 	SDL_Window*			m_Window;
 
@@ -55,6 +62,9 @@ public:
 	std::string			m_relAssetPath;
 
 	std::unordered_map<std::string, AnimatedModel> m_AnimatedModels;
+
+	ViewProj			m_ViewProj;
+	UniformBuffer		m_ViewProjUniform; // TODO: type should be VkalUniformBuffer
 };
 
 #endif

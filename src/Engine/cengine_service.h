@@ -33,6 +33,7 @@ public:
     std::string					m_ExePath;
 	std::string					m_relAssetPath;
 	std::vector<Player>         m_Players;
+	Camera*						m_ActiveCamera;
 };
 
 #endif

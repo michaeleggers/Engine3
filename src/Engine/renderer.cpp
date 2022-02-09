@@ -16,6 +16,7 @@
 #include "platform.h"
 #include "renderer.h"
 #include "player.h"
+#include "camera.h"
 
 void Renderer::Init(SDL_Window * window)
 {
@@ -132,7 +133,7 @@ void Renderer::CreateAnimatedModelPipeline(std::string vertShaderFile, std::stri
 	}
 	
 	/* Pipeline */
-	VkPipelineLayout pipeline_layout = vkal_create_pipeline_layout(NULL, 0, NULL, 0);
+	VkPipelineLayout pipeline_layout = vkal_create_pipeline_layout(layouts, 1, NULL, 0);
 	VkPipeline graphics_pipeline = vkal_create_graphics_pipeline(
 		vertex_input_bindings, 1,
 		vertex_attributes, vertex_attribute_count,
@@ -144,6 +145,10 @@ void Renderer::CreateAnimatedModelPipeline(std::string vertShaderFile, std::stri
 
 	m_animatedModelLayout   = pipeline_layout;
 	m_animatedModelPipeline = graphics_pipeline;
+
+	/* Update Descriptor Sets */
+	m_ViewProjUniform = vkal_create_uniform_buffer(sizeof(ViewProj), 1, 0);
+	vkal_update_descriptor_set_uniform(m_DescriptorSets[0], m_ViewProjUniform, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
 }
 
 static std::string loadTextFile(std::string file)
@@ -244,10 +249,17 @@ AnimatedModel Renderer::RegisterModel(std::string model) // TODO: check if model
 
 // TODO: Renderer gets a refresh definition with all the stuff that needs to be done.
 //       For now just the player.
-void Renderer::RenderFrame(std::vector<Player> players)
+void Renderer::RenderFrame(std::vector<Player> players, Camera * camera)
 {
 	int width, height;
 	SDL_GetWindowSize(m_Window, &width, &height);
+
+	// update view-proj matrices
+	m_ViewProj.viewMat = glm::lookAt(camera->m_Pos, camera->m_Center, camera->m_Up);
+	m_ViewProj.projMat = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.01f, 1000.0f);
+	//vkal_update_descriptor_set_uniform(m_DescriptorSets[0], m_ViewProjUniform, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+	vkal_update_uniform(&m_ViewProjUniform, &m_ViewProj);
+
 	{
 		//vkDeviceWaitIdle(vkal_info->device);
 		uint32_t image_id = vkal_get_image();
@@ -265,7 +277,7 @@ void Renderer::RenderFrame(std::vector<Player> players)
 			0, 0,
 			(float)width, (float)height);
 
-		//vkal_bind_descriptor_set(image_id, &m_DescriptorSets[0], m_animatedModelLayout);
+		vkal_bind_descriptor_set(image_id, &m_DescriptorSets[0], m_animatedModelLayout);
 		for (int i = 0; i < players.size(); ++i) {
 			Player player = players[i];
 			vkal_draw_indexed(image_id, m_animatedModelPipeline,
