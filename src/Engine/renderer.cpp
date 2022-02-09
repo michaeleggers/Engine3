@@ -244,6 +244,8 @@ AnimatedModel Renderer::RegisterModel(std::string model) // TODO: check if model
 	animModel.pipeline	   = m_animatedModelPipeline;
 	animModel.pipelineLayout = m_animatedModelLayout;
 
+	m_AnimatedModels.insert({ model, animModel });
+
 	return animModel;
 }
 
