@@ -9,7 +9,7 @@ public:
 	Camera(glm::vec3 pos) : 
 		m_Pos(pos),
 		m_Center(glm::vec3(0)),
-		m_Up(glm::vec3(0, 1, 0))
+		m_Up(glm::vec3(0, 0, 1))
 	{}
 
 	glm::vec3 m_Pos;

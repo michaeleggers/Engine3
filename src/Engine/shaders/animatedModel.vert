@@ -16,6 +16,13 @@ layout (set = 0, binding = 0) uniform ViewProj_t
     mat4  proj;
 } u_view_proj;
 
+// const mat4 blender2engine = mat4(
+//     1, 0, 0, 0,
+//     0, 0, 1, 0,
+//     0, 1, 0, 0,
+//     0, 0, 0, 1
+// );
+
 void main()
 {
     out_uv = uv;

@@ -11,6 +11,11 @@
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
 
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <glm/glm.hpp>
+#include <glm/ext.hpp>
+
 #include <vkal.h>
 
 #include "platform.h"

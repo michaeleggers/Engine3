@@ -87,7 +87,7 @@ void MyGame::OnEngineInitialized(void)
 
     Player * player = engineService->CreatePlayer(glm::vec3(0), "models/policeman.gpmesh");
     Player* player2 = engineService->CreatePlayer(glm::vec3(0), "models/policeman.gpmesh");
-    m_Camera = engineService->CreateCamera(glm::vec3(0.0f, 0.0f, -2.0f));
+    m_Camera = engineService->CreateCamera(glm::vec3(1.0f, -2.0f, 2.0f));
 
 }
 
