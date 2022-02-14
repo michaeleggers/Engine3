@@ -26,7 +26,7 @@ class IGameClient
 {
 public:
     virtual void		OnEngineInitialized(void) = 0;
-    virtual void		Update(void) = 0;
+    virtual void		Update(bool * scancodes) = 0;
 };
 
 

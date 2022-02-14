@@ -2,6 +2,8 @@
 
 #include "interface.h"
 
+#include <SDL.h>
+
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
@@ -61,12 +63,14 @@
 class MyGame : public IGameClient
 {
 public:
-    MyGame(void) {}
+    MyGame(void):
+    m_Camera(NULL)
+    {}
     ~MyGame() {}
 
 	// Overrides from Interface
     void OnEngineInitialized(void);
-    void Update(void);
+    void Update(bool * scancodes);
 
 	// Game Specific
 	void Render(void);
@@ -87,14 +91,26 @@ void MyGame::OnEngineInitialized(void)
 
     Player * player = engineService->CreatePlayer(glm::vec3(0), "models/policeman.gpmesh");
     Player* player2 = engineService->CreatePlayer(glm::vec3(0), "models/policeman.gpmesh");
-    m_Camera = engineService->CreateCamera(glm::vec3(1.0f, -2.0f, 2.0f));
+    m_Camera = engineService->CreateCamera(glm::vec3(2.0f, -2.0f, 4.0f));
 
 }
 
-void MyGame::Update(void)
+void MyGame::Update(bool * scancodes)
 {
-    // handle input
-
+    glm::vec3 camForward = glm::normalize(m_Camera->m_Center - m_Camera->m_Pos);
+    glm::vec3 camRight = glm::normalize(glm::cross(camForward, m_Camera->m_Up));
+    if (scancodes[SDL_SCANCODE_UP]) {
+        m_Camera->m_Pos += .01f * camForward;
+    }
+    if (scancodes[SDL_SCANCODE_DOWN]) {        
+        m_Camera->m_Pos -= .01f * camForward;
+    }
+    if (scancodes[SDL_SCANCODE_RIGHT]) {
+        m_Camera->m_Pos += .1f * camRight;
+    }
+    if (scancodes[SDL_SCANCODE_LEFT]) {
+        m_Camera->m_Pos -= .1f * camRight;
+    }
     
 }
 

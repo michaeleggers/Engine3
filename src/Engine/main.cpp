@@ -97,6 +97,7 @@ int main(int argc, char** argv)
     gameClient->OnEngineInitialized();
 
     // Loop
+    bool scancodes[SDL_NUM_SCANCODES] = { false };
     bool running = true;
     while (running) {
 
@@ -106,12 +107,15 @@ int main(int argc, char** argv)
             running = false;
         }
         
+        memset(scancodes, false, SDL_NUM_SCANCODES * sizeof(bool));
         switch (event.key.keysym.scancode) 
         {
             case (SDL_SCANCODE_ESCAPE): { running = false; } break;
+            
         }
+        scancodes[event.key.keysym.scancode] = true;
         
-        gameClient->Update();
+        gameClient->Update(scancodes);
 
         engineService->RenderFrame();
     }
