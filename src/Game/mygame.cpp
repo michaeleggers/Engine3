@@ -10,9 +10,11 @@
 #include <glm/ext.hpp>
 
 #include <string>
+#include <unordered_map>
 
 #include "player.h"
 #include "camera.h"
+#include "input_handler.h"
 
 /* 
  What do I need ?
@@ -72,11 +74,7 @@ public:
     void OnEngineInitialized(void);
     void Update(bool * scancodes);
 
-	// Game Specific
-	void Render(void);
-
-    Camera * m_Camera;
-
+    Camera* m_Camera;
 };
 
 
@@ -95,35 +93,58 @@ void MyGame::OnEngineInitialized(void)
 
 }
 
+// TODO: extra file!
+enum Action {
+    ACTION_NONE = 0,
+    MOVE_CAM_FORWARD,
+    MOVE_CAM_BACKWARD,
+    MOVE_CAM_LEFT,
+    MOVE_CAM_RIGHT,
+    MAX_ACTIONS
+};
+struct KeyToAction {
+    uint32_t    scancode;
+    Action      action;
+};
+static KeyToAction keyMappings[SDL_NUM_SCANCODES] = { };
+void setupKeyMappings()
+{
+    // load from config
+    keyMappings[SDL_SCANCODE_UP].action   = MOVE_CAM_BACKWARD; // invert functionality...
+    keyMappings[SDL_SCANCODE_DOWN].action = MOVE_CAM_FORWARD;  // this now pulls camera towards the center.
+    keyMappings[SDL_SCANCODE_LEFT].action = MOVE_CAM_LEFT;
+    keyMappings[SDL_SCANCODE_RIGHT].action = MOVE_CAM_RIGHT;
+}
+
+Action actionForKey(uint32_t scancode)
+{
+    return keyMappings[scancode].action;
+}
+
 void MyGame::Update(bool * scancodes)
 {
+    setupKeyMappings(); // TODO: setup once.
     glm::vec3 camForward = glm::normalize(m_Camera->m_Center - m_Camera->m_Pos);
     glm::vec3 camRight = glm::normalize(glm::cross(camForward, m_Camera->m_Up));
-    if (scancodes[SDL_SCANCODE_UP]) {
-        m_Camera->m_Pos += .01f * camForward;
-    }
-    if (scancodes[SDL_SCANCODE_DOWN]) {        
-        m_Camera->m_Pos -= .01f * camForward;
-    }
-    if (scancodes[SDL_SCANCODE_RIGHT]) {
-        m_Camera->m_Pos += .1f * camRight;
-    }
-    if (scancodes[SDL_SCANCODE_LEFT]) {
-        m_Camera->m_Pos -= .1f * camRight;
-    }
-    
+
+    for (uint32_t scancode = 0; scancode < SDL_NUM_SCANCODES; ++scancode) { // TODO: really need to iterate over all of these every frame?
+        if (scancodes[scancode]) { 
+            Action action = actionForKey(scancode);
+            if (action != ACTION_NONE) { // TODO: switch
+                if (action == MOVE_CAM_FORWARD)
+                    m_Camera->m_Pos += .01f * camForward;
+                if (action == MOVE_CAM_BACKWARD)
+                    m_Camera->m_Pos -= .01f * camForward;
+                if (action == MOVE_CAM_LEFT)
+                    m_Camera->m_Pos -= .1f * camRight;
+                if (action == MOVE_CAM_RIGHT)
+                    m_Camera->m_Pos += .1f * camRight;
+            }
+        }
+    }    
 }
 
-// TODO: Functions for setting render specific stuff such as resolution, bit-depth, and so on. (check lithtech/irrlicht).
 
-void MyGame::Render(void)
-{
-    // TODO: We need to call the RenderFrame function from the game. Otherwise it will
-    //       be way too difficult to let the game-logic decide what camer to use!!!!!
-    //       I'll do this tomorrow. Good night everyone!
-    //renderer->drawFrame(camera, other things);
-
-}
 
 EXPORT_GAME_CLIENT(MyGame, gameClient, engineService);
 

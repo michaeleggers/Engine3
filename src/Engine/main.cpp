@@ -107,13 +107,18 @@ int main(int argc, char** argv)
             running = false;
         }
         
-        memset(scancodes, false, SDL_NUM_SCANCODES * sizeof(bool));
+        if (event.key.type == SDL_KEYDOWN) {
+            scancodes[event.key.keysym.scancode] = true;
+        }
+        else if (event.key.type == SDL_KEYUP) {
+            scancodes[event.key.keysym.scancode] = false;
+        }
+
         switch (event.key.keysym.scancode) 
         {
             case (SDL_SCANCODE_ESCAPE): { running = false; } break;
             
         }
-        scancodes[event.key.keysym.scancode] = true;
         
         gameClient->Update(scancodes);
 
