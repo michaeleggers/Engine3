@@ -11,7 +11,7 @@
 
 struct Vertex
 {
-	float x, y, z;
+	double x, y, z;
 };
 
 struct Face
@@ -175,6 +175,7 @@ int main(int argc, char** argv)
 		
 	}
 
+	printf("done!\n");
 	getchar();
 
 	return 0;
