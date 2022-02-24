@@ -37,6 +37,7 @@ enum TokenType
 	NUMBER,
 	STRING,
 	COMMENT,
+	TEXNAME,
 	UNKNOWN
 };
 
@@ -48,11 +49,23 @@ struct Token
 	};
 };
 
+struct Map
+{
+	std::vector<Face> faces;
+	// TODO: Other entities with properties such as: "classname" -> "info_player_start"
+};
+
+static std::vector<TokenType> g_Tokens;
+
 static std::string loadTextFile(std::string file)
 {
 	std::ifstream iFileStream;
 	std::stringstream ss;
 	iFileStream.open(file, std::ifstream::in);
+	if (iFileStream.fail()) {
+		fprintf(stderr, "Unable to open file: %s!\nExiting...", file.c_str());
+		exit(-1);
+	}
 	ss << iFileStream.rdbuf();
 	std::string data = ss.str();
 	iFileStream.close();
@@ -74,42 +87,78 @@ void advanceToNextWhitespaceOrLinebreak(char** c, int* pos)
 	}
 }
 
+
 TokenType getToken(char * c, int * pos)
 {
+	TokenType result = UNKNOWN;
 	advanceToNextNonWhitespace(&c, pos);
 
 	if (*c == '{') {
 		*pos += 1;
-		return LBRACE;
+		result = LBRACE;
+		g_Tokens.push_back(result);
 	}
 	else if (*c == '}') {
 		*pos += 1;
-		return RBRACE;
+		result = RBRACE;
 	}
 	else if (*c == '(') {
 		*pos += 1;
-		return LPAREN;
+		result = LPAREN;
+		g_Tokens.push_back(result);
 	}
 	else if (*c == ')') {
 		*pos += 1;
-		return RPAREN;
+		result = RPAREN;
 	}
 	else if (*c == '"') {
 		*pos += 1;
-		return STRING;
+		result = STRING;
 	}
 	else if (*c >= '0' && *c <= '9') {
-		return NUMBER;
+		result = NUMBER;
 	}
 	else if (*c == '/') {
 		while (*c != '\r' && *c != '\n') {
 			c++; *pos += 1;
 		}
-		return COMMENT;
+		result = COMMENT;
 	}
-	else if (*c >= 'A' && *c <= 'z')
+	else if (*c >= 'A' && *c <= 'z') {
+		result = TEXNAME;
+	}
+	else {
+		result = UNKNOWN;
+	}
 
-	return UNKNOWN;
+	return result;
+}
+
+std::string tokenToString(TokenType tokenType)
+{
+	switch (tokenType)
+	{
+	case LBRACE: return "LBRACE"; break;
+	case RBRACE: return "RBRACE"; break;
+	case LPAREN: return "LPAREN"; break;
+	case RPAREN: return "RPAREN"; break;
+	case NUMBER: return "NUMBER"; break;
+	case STRING: return "STRING"; break;
+	case COMMENT: return "COMMENT"; break;
+	default: return std::string("");
+	}
+}
+
+bool matchToken(char* c, int* pos, TokenType expected)
+{
+	TokenType got = getToken(c, pos);
+	if (expected != got) {
+		fprintf(stderr, "ERROR: Expected Token: %s, but got: %s\n", 
+			tokenToString(expected).c_str(), tokenToString(got).c_str());
+		return false;
+	}
+
+	return true;
 }
 
 std::string getString(char* c, int* pos)
@@ -180,25 +229,28 @@ void parse(char* c, int* pos)
 	}
 }
 
-std::vector<TokenType> g_Tokens;
-
-int main(int argc, char** argv)
+Map getMap(char* mapData, size_t mapDataLength)
 {
-	std::string mapData = loadTextFile(argv[1]);
-	size_t inputLength = mapData.length();
-	size_t inputSizeInBytes = mapData.size();
-
+	Map map = {};
 	std::vector<Face> faces;
 
 	int pos = 0;
-	while (pos < inputLength) {
+	while (pos < mapDataLength) {
 
-		TokenType token = getToken(&mapData[pos], &pos);	
+		TokenType token = getToken(&mapData[pos], &pos);
 		if (token == LBRACE) { // Entity or Brush
-			g_Tokens.push_back(token);
+			//g_Tokens.push_back(token);
+		}
+		else if (token == RBRACE) {
+			if (g_Tokens.back() == LBRACE) {
+				g_Tokens.pop_back();
+			}
+			else {
+				fprintf(stderr, "WARNING: Expected Token: }, but got: %s\n", tokenToString(token).c_str());
+			}
 		}
 		else if (token == STRING) { // Property
-			std::string key   = getString(&mapData[pos], &pos);
+			std::string key = getString(&mapData[pos], &pos);
 			token = getToken(&mapData[pos], &pos);
 			std::string value = getString(&mapData[pos], &pos);
 		}
@@ -206,21 +258,21 @@ int main(int argc, char** argv)
 			Face face = {};
 
 			Vertex v0 = getVertex(&mapData[pos], &pos);
-			token = getToken(&mapData[pos], &pos);
+			matchToken(&mapData[pos], &pos, RPAREN);
 
-			token = getToken(&mapData[pos], &pos);
+			matchToken(&mapData[pos], &pos, LPAREN);
 			Vertex v1 = getVertex(&mapData[pos], &pos);
-			token = getToken(&mapData[pos], &pos);
+			matchToken(&mapData[pos], &pos, RPAREN);
 
-			token = getToken(&mapData[pos], &pos);
+			matchToken(&mapData[pos], &pos, LPAREN);
 			Vertex v2 = getVertex(&mapData[pos], &pos);
-			token = getToken(&mapData[pos], &pos);
-
+			matchToken(&mapData[pos], &pos, RPAREN);
+			
 			TextureData tex = {};
 			token = getToken(&mapData[pos], &pos);
 			tex.name = getTextureName(&mapData[pos], &pos);
 			token = getToken(&mapData[pos], &pos); // Number
-			
+
 			tex.xOffset = getNumber(&mapData[pos], &pos);
 			token = getToken(&mapData[pos], &pos); // Number
 			tex.yOffset = getNumber(&mapData[pos], &pos);
@@ -230,7 +282,7 @@ int main(int argc, char** argv)
 			tex.xScale = getNumber(&mapData[pos], &pos);
 			token = getToken(&mapData[pos], &pos); // Number
 			tex.yScale = getNumber(&mapData[pos], &pos);
-			
+
 			face.vertices = std::vector<Vertex>{ v0, v1, v2 };
 			face.texData = tex;
 
@@ -238,11 +290,27 @@ int main(int argc, char** argv)
 		}
 		
 		pos++;
-		
 	}
+	
+	map.faces = faces;
+	
+	return map;
+}
+
+int main(int argc, char** argv)
+{
+	if (argc < 2) {
+		fprintf(stderr, "No .map provided! Usage:\npolysoup <mapfile>");
+		exit(-1);
+	}
+	std::string mapData = loadTextFile(argv[1]);
+	size_t inputLength = mapData.length();
+	size_t inputSizeInBytes = mapData.size();
+	Map map = getMap(&mapData[0], inputLength);
+	
 
 	printf("done!\n");
-	getchar();
+	//getchar();
 
 	return 0;
 }
