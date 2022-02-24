@@ -188,6 +188,8 @@ int main(int argc, char** argv)
 	size_t inputLength = mapData.length();
 	size_t inputSizeInBytes = mapData.size();
 
+	std::vector<Face> faces;
+
 	int pos = 0;
 	while (pos < inputLength) {
 
@@ -231,6 +233,8 @@ int main(int argc, char** argv)
 			
 			face.vertices = std::vector<Vertex>{ v0, v1, v2 };
 			face.texData = tex;
+
+			faces.push_back(face);
 		}
 		
 		pos++;
