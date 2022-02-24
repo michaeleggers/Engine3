@@ -58,6 +58,13 @@ void advanceToNextNonWhitespace(char** c, int* pos)
 	}
 }
 
+void advanceToNextWhitespaceOrLinebreak(char** c, int* pos)
+{
+	while (!isspace(**c) && **c != '\n' && **c != '\r') {
+		*c += 1; *pos += 1;
+	}
+}
+
 TokenType getToken(char * c, int * pos)
 {
 	advanceToNextNonWhitespace(&c, pos);
@@ -82,12 +89,16 @@ TokenType getToken(char * c, int * pos)
 		*pos += 1;
 		return STRING;
 	}
+	else if (*c >= '0' && *c <= '9') {
+		return NUMBER;
+	}
 	else if (*c == '/') {
 		while (*c != '\r' && *c != '\n') {
 			c++; *pos += 1;
 		}
 		return COMMENT;
 	}
+	else if (*c >= 'A' && *c <= 'z')
 
 	return UNKNOWN;
 }
@@ -122,6 +133,18 @@ Vertex getVertex(char* c, int* pos)
 	v.z = values[2];
 
 	return v;
+}
+
+std::string getTextureName(char* c, int* pos)
+{
+	std::string textureName = "";
+	char* end = c;
+	advanceToNextWhitespaceOrLinebreak(&end, pos);
+	while (c != end) {
+		textureName += *c; c++;
+	}
+
+	return textureName;
 }
 
 void parse(char* c, int* pos)
@@ -169,6 +192,11 @@ int main(int argc, char** argv)
 			token = getToken(&mapData[pos], &pos);
 			Vertex v2 = getVertex(&mapData[pos], &pos);
 			token = getToken(&mapData[pos], &pos);
+
+			token = getToken(&mapData[pos], &pos);
+			std::string textureName = getTextureName(&mapData[pos], &pos);
+			token = getToken(&mapData[pos], &pos);
+
 		}
 		
 		pos++;
