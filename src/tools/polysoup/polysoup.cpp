@@ -38,7 +38,8 @@ enum TokenType
 	STRING,
 	COMMENT,
 	TEXNAME,
-	UNKNOWN
+	UNKNOWN,
+	END_OF_INPUT
 };
 
 struct Token
@@ -56,6 +57,7 @@ struct Map
 };
 
 static std::vector<TokenType> g_Tokens;
+static int                    g_InputLength;
 
 static std::string loadTextFile(std::string file)
 {
@@ -73,10 +75,21 @@ static std::string loadTextFile(std::string file)
 	return data;
 }
 
-void advanceToNextNonWhitespace(char** c, int* pos)
+int advanceCursor(int* pos, int steps)
 {
-	while (isspace(**c)) {
-		*c += 1; *pos += 1;
+	int advanceable = g_InputLength - *pos+steps;
+	if (advanceable > 0) {
+		*pos += advanceable;
+		return advanceable;
+	}
+	return 0;
+}
+
+void advanceToNextNonWhitespace(char* c, int* pos)
+{
+	char* cur = c + *pos;
+	while (isspace(*cur)) {
+		cur++; *pos += 1;
 	}
 }
 
@@ -87,49 +100,86 @@ void advanceToNextWhitespaceOrLinebreak(char** c, int* pos)
 	}
 }
 
-void advanceToNextLine(char** c, int* pos)
+void skipLinebreak(char* c, int* pos)
 {
-	while (**c != '\r' && **c != '\n') {
-		*c += 1; *pos += 1;
-	}
-	if (**c == '\r') {
-		*c += 1; *pos += 1;
-	}
-	if (**c == '\n') {
-		*c += 1; *pos += 1;
+	char* cur = c + *pos;
+	while (*cur == '\r' || *cur == '\n') {
+		cur++; *pos += 1;
 	}
 }
 
-TokenType getToken(char * c, int * pos)
+void advanceToNextLine(char* c, int* pos)
 {
+	char* cur = c + *pos;
+	while (*cur != '\r' && *cur != '\n') {
+		cur++; *pos += 1;
+	}
+	if (*cur == '\r') {
+		cur++; *pos += 1;
+	}
+	if (*cur == '\n') {
+		cur++; *pos += 1;
+	}
+}
+
+std::string getString(char*c, int* pos)
+{
+	char* cur = c + *pos;
+
+	cur++; *pos += 1; // advance over "
+	std::string result = "";
+	while (*cur != '\"') {
+		result += *cur; *pos += 1; cur++;
+	}
+	*pos += 1; // advance over "
+
+	return result;
+}
+
+TokenType getToken(char* c, int* pos)
+{	
+	if (*pos >= g_InputLength) {
+		return END_OF_INPUT;
+	}
+
 	TokenType result = UNKNOWN;
 
+	advanceToNextNonWhitespace(c, pos);
+	skipLinebreak(c, pos);
 
-	if (*c == '{') {
+	while (*(c + *pos) == '/') { // Skip over all comments
+		advanceToNextLine(c, pos);
+		advanceToNextNonWhitespace(c, pos);
+	}
+
+	char* cur = c + *pos;
+
+	if (*cur == '{') {
 		result = LBRACE;
 		g_Tokens.push_back(result);
 	}
-	else if (*c == '}') {
+	else if (*cur == '}') {
 		result = RBRACE;
 	}
-	else if (*c == '(') {
+	else if (*cur == '(') {
 		result = LPAREN;
 		g_Tokens.push_back(result);
 	}
-	else if (*c == ')') {
+	else if (*cur == ')') {
 		result = RPAREN;
 	}
-	else if (*c == '"') {
+	else if (*cur == '"') {
 		result = STRING;
 	}
-	else if (*c >= '0' && *c <= '9') {
+	else if (*cur >= '0' && *cur <= '9' || *cur == '-') { // TODO: MINUS own token and check again if really NUMBER
 		result = NUMBER;
 	}
-	else if (*c >= 'A' && *c <= 'z') {
+	else if (*cur >= 'A' && *cur <= 'z') {
 		result = TEXNAME;
 	}
 	else {
 		result = UNKNOWN;
+		*pos += 1;
 	}
 
 	return result;
@@ -150,18 +200,24 @@ std::string tokenToString(TokenType tokenType)
 	}
 }
 
-bool matchToken(char* c, int* pos, TokenType expected)
-{
-	advanceToNextNonWhitespace(&c, pos);
-	while (*c == '/') { // Skip over all comments
-		advanceToNextLine(&c, pos);
-		advanceToNextNonWhitespace(&c, pos);
-	}
+//TokenType matchToken(char* c, int* pos)
+//{
+//	advanceToNextNonWhitespace(&c, pos);
+//	while (*c == '/') { // Skip over all comments
+//		advanceToNextLine(&c, pos);
+//		advanceToNextNonWhitespace(&c, pos);
+//	}
+//
+//	TokenType got = getToken(c, pos);
+//	c++; *pos += 1;
+//
+//	return got;
+//}
 
-	TokenType got = getToken(c, pos);
-	c++; *pos += 1;
+bool check(TokenType got, TokenType expected)
+{
 	if (expected != got) {
-		fprintf(stderr, "ERROR: Expected Token: %s, but got: %s\n", 
+		fprintf(stderr, "ERROR: Expected Token: %s, but got: %s\n",
 			tokenToString(expected).c_str(), tokenToString(got).c_str());
 		return false;
 	}
@@ -169,23 +225,14 @@ bool matchToken(char* c, int* pos, TokenType expected)
 	return true;
 }
 
-std::string getString(char** c, int* pos)
-{
-	*c += 1; *pos += 1; // advance over "
-	std::string result = "";
-	while (**c != '\"') {
-		result += **c; *pos += 1; *c += 1;
-	}
-	*c += 1; *pos += 1; // advance over "
 
-	return result;
-}
 
-double parseNumber(char** c, int* pos)
+double parseNumber(char* c, int* pos)
 {
+	char* cur = c + *pos;
 	std::string number = "";
-	while (**c == '-' || **c >= '0' && **c <= '9' || **c == '.') {
-		number += **c; *c += 1; *pos += 1;
+	while (*cur == '-' || *cur >= '0' && *cur <= '9' || *cur == '.') {
+		number += *cur; cur++; *pos += 1;
 	}
 	return atof(number.c_str());
 }
@@ -195,8 +242,8 @@ Vertex getVertex(char* c, int* pos)
 	Vertex v = { };
 	std::vector<double> values;
 	for (int i = 0; i < 3; i++) { // A face is defined by 3 vertices.
-		advanceToNextNonWhitespace(&c, pos);
-		double value = parseNumber(&c, pos);
+		advanceToNextNonWhitespace(c, pos);
+		double value = parseNumber(c, pos);
 		values.push_back(value);
 	}
 
@@ -209,70 +256,81 @@ Vertex getVertex(char* c, int* pos)
 
 double getNumber(char* c, int* pos)
 {
-	return parseNumber(&c, pos);
+	char* cur = c + *pos;
+	std::string number = "";
+	while (*cur == '-' || *cur >= '0' && *cur <= '9' || *cur == '.') {
+		number += *cur; cur++; *pos += 1;
+	}
+	return atof(number.c_str());
 }
 
 std::string getTextureName(char* c, int* pos)
 {
+	char* cur = c + *pos;
+
 	std::string textureName = "";
-	char* end = c;
+	char* end = cur;
 	advanceToNextWhitespaceOrLinebreak(&end, pos);
-	while (c != end) {
-		textureName += *c; c++;
+	while (cur != end) {
+		textureName += *cur; cur++;
 	}
 
 	return textureName;
 }
 
-void getProperty(char* c, int* pos) {
-	matchToken(c, pos, STRING);
-	matchToken(c, pos, STRING);
+void getProperty(char* c, int* pos) 
+{
+	check(getToken(c, pos), STRING);
+	std::string key = getString(c, pos);
+	check(getToken(c, pos), STRING);
+	std::string value = getString(c, pos);
 }
 
-void getBrush(char* c, int* pos) {
-	Face face = {};
-	TokenType token = UNKNOWN;
+void getBrush(char* c, int* pos) 
+{
+	for (size_t i = 0; i < 3; ++i) {
+		check(getToken(c, pos), LPAREN); *pos += 1;
+		check(getToken(c, pos), NUMBER);
+		double x = getNumber(c, pos);
+		check(getToken(c, pos), NUMBER);
+		double y = getNumber(c, pos);
+		check(getToken(c, pos), NUMBER);
+		double z = getNumber(c, pos);
+		check(getToken(c, pos), RPAREN); *pos += 1;
+	}
 
-	Vertex v0 = getVertex(c, pos);
-	matchToken(c, pos, RPAREN);
-
-	matchToken(c, pos, LPAREN);
-	Vertex v1 = getVertex(c, pos);
-	matchToken(c, pos, RPAREN);
-
-	matchToken(c, pos, LPAREN);
-	Vertex v2 = getVertex(c, pos);
-	matchToken(c, pos, RPAREN);
-
-	TextureData tex = {};
-	token = getToken(c, pos);
-	tex.name = getTextureName(c, pos);
-	token = getToken(c, pos); // Number
-
-	tex.xOffset = getNumber(c, pos);
-	token = getToken(c, pos); // Number
-	tex.yOffset = getNumber(c, pos);
-	token = getToken(c, pos); // Number
-	tex.rotation = getNumber(c, pos);
-	token = getToken(c, pos); // Number
-	tex.xScale = getNumber(c, pos);
-	token = getToken(c, pos); // Number
-	tex.yScale = getNumber(c, pos);
-
-	face.vertices = std::vector<Vertex>{ v0, v1, v2 };
-	face.texData = tex;
+	check(getToken(c, pos), TEXNAME);
+	std::string texName = getTextureName(c, pos);
+	check(getToken(c, pos), NUMBER);
+	double xOffset = getNumber(c, pos);
+	check(getToken(c, pos), NUMBER);
+	double yOffset = getNumber(c, pos);
+	check(getToken(c, pos), NUMBER);
+	double rotation = getNumber(c, pos);
+	check(getToken(c, pos), NUMBER);
+	double xScale = getNumber(c, pos);
+	check(getToken(c, pos), NUMBER);
+	double yScale = getNumber(c, pos);
 }
 
 void getEntity(char* c, int* pos)
 {
-	advanceToNextNonWhitespace(&c, pos);
-
-	while (matchToken(c, pos, STRING)) {
+	while (getToken(c, pos) == STRING) {
 		getProperty(c, pos);
 	}
-	while (matchToken(c, pos, LPAREN)) {
+
+	while (getToken(c, pos) == LPAREN) {
 		getBrush(c, pos);
 	}
+
+	while (getToken(c, pos) == LBRACE) {
+		*pos += 1;
+		getEntity(c, pos);
+	}
+
+	if (getToken(c, pos) == END_OF_INPUT) return;
+
+	check(getToken(c, pos), RBRACE); *pos += 1;
 }
 
 Map getMap(char* mapData, size_t mapDataLength)
@@ -282,68 +340,9 @@ Map getMap(char* mapData, size_t mapDataLength)
 
 	int pos = 0;
 
-	while (matchToken(&mapData[pos], &pos, LBRACE)) {		
-		getEntity(&mapData[pos], &pos);
-		matchToken(&mapData[pos], &pos, RBRACE);
-	}
+	check(getToken(&mapData[0], &pos), LBRACE);
+	getEntity(&mapData[0], &pos);
 
-	while (pos < mapDataLength) {
-
-		TokenType token = getToken(&mapData[pos], &pos);
-		if (token == LBRACE) { // Entity or Brush
-			//g_Tokens.push_back(token);
-		}
-		else if (token == RBRACE) {
-			if (g_Tokens.back() == LBRACE) {
-				g_Tokens.pop_back();
-			}
-			else {
-				fprintf(stderr, "WARNING: Expected Token: }, but got: %s\n", tokenToString(token).c_str());
-			}
-		}
-		else if (token == STRING) { // Property
-			//std::string key = getString(&mapData[pos], &pos);
-			token = getToken(&mapData[pos], &pos);
-			//std::string value = getString(&mapData[pos], &pos);
-		}
-		else if (token == LPAREN) { // Face
-			Face face = {};
-
-			Vertex v0 = getVertex(&mapData[pos], &pos);
-			matchToken(&mapData[pos], &pos, RPAREN);
-
-			matchToken(&mapData[pos], &pos, LPAREN);
-			Vertex v1 = getVertex(&mapData[pos], &pos);
-			matchToken(&mapData[pos], &pos, RPAREN);
-
-			matchToken(&mapData[pos], &pos, LPAREN);
-			Vertex v2 = getVertex(&mapData[pos], &pos);
-			matchToken(&mapData[pos], &pos, RPAREN);
-			
-			TextureData tex = {};
-			token = getToken(&mapData[pos], &pos);
-			tex.name = getTextureName(&mapData[pos], &pos);
-			token = getToken(&mapData[pos], &pos); // Number
-
-			tex.xOffset = getNumber(&mapData[pos], &pos);
-			token = getToken(&mapData[pos], &pos); // Number
-			tex.yOffset = getNumber(&mapData[pos], &pos);
-			token = getToken(&mapData[pos], &pos); // Number
-			tex.rotation = getNumber(&mapData[pos], &pos);
-			token = getToken(&mapData[pos], &pos); // Number
-			tex.xScale = getNumber(&mapData[pos], &pos);
-			token = getToken(&mapData[pos], &pos); // Number
-			tex.yScale = getNumber(&mapData[pos], &pos);
-
-			face.vertices = std::vector<Vertex>{ v0, v1, v2 };
-			face.texData = tex;
-
-			faces.push_back(face);
-		}
-		
-		pos++;
-	}
-	
 	map.faces = faces;
 	
 	return map;
@@ -357,10 +356,10 @@ int main(int argc, char** argv)
 	}
 	std::string mapData = loadTextFile(argv[1]);
 	size_t inputLength = mapData.length();
+	g_InputLength = inputLength;
 	size_t inputSizeInBytes = mapData.size();
 	Map map = getMap(&mapData[0], inputLength);
 	
-
 	printf("done!\n");
 	//getchar();
 
