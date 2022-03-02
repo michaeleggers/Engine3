@@ -22,6 +22,7 @@ include_directories(
 
 add_executable(Polysoup
     polysoup.cpp
+    parser.h
 )
 
 
