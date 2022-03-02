@@ -71,7 +71,7 @@ struct Entity
 
 struct Map
 {
-	std::vector<Face> faces;
+	std::vector<Entity> entities;
 	// TODO: Other entities with properties such as: "classname" -> "info_player_start"
 };
 
@@ -299,16 +299,20 @@ std::string getTextureName(char* c, int* pos)
 	return textureName;
 }
 
-void getProperty(char* c, int* pos) 
+Property getProperty(char* c, int* pos) 
 {
 	check(getToken(c, pos), STRING);
 	std::string key = getString(c, pos);
 	check(getToken(c, pos), STRING);
 	std::string value = getString(c, pos);
+
+	return { key, value };
 }
 
-void getFace(char* c, int* pos) 
+Face getFace(char* c, int* pos) 
 {
+	Face face = { };
+
 	for (size_t i = 0; i < 3; ++i) {
 		check(getToken(c, pos), LPAREN); *pos += 1;
 		check(getToken(c, pos), NUMBER);
@@ -318,63 +322,71 @@ void getFace(char* c, int* pos)
 		check(getToken(c, pos), NUMBER);
 		double z = getNumber(c, pos);
 		check(getToken(c, pos), RPAREN); *pos += 1;
+		face.vertices.push_back({ x, y, z });
 	}
 
 	check(getToken(c, pos), TEXNAME);
-	std::string texName = getTextureName(c, pos);
+	face.textureName = getTextureName(c, pos);
 	check(getToken(c, pos), NUMBER);
-	double xOffset = getNumber(c, pos);
+	face.xOffset = getNumber(c, pos);
 	check(getToken(c, pos), NUMBER);
-	double yOffset = getNumber(c, pos);
+	face.yOffset = getNumber(c, pos);
 	check(getToken(c, pos), NUMBER);
-	double rotation = getNumber(c, pos);
+	face.rotation = getNumber(c, pos);
 	check(getToken(c, pos), NUMBER);
-	double xScale = getNumber(c, pos);
+	face.xScale = getNumber(c, pos);
 	check(getToken(c, pos), NUMBER);
-	double yScale = getNumber(c, pos);
+	face.yScale = getNumber(c, pos);
+
+	return face;
 }
 
-void getBrush(char* c, int* pos)
+Brush getBrush(char* c, int* pos)
 {
+	Brush brush = { };
+
 	while (getToken(c, pos) == LPAREN) {
-		getFace(c, pos);
+		brush.faces.push_back(getFace(c, pos));
 	}
+	return brush;
 }
 
 /** 
 * I assume that the grammar does not allow a property *before* a brush!
 */
-void getEntity(char* c, int* pos)
+Entity getEntity(char* c, int* pos)
 {
+	Entity e = { }; 
+
 	while (getToken(c, pos) == STRING) {
-		getProperty(c, pos);
+		e.properties.push_back(getProperty(c, pos));
 	}
 
 	while (getToken(c, pos) == LBRACE) {
 		*pos += 1;
-		getBrush(c, pos);
+		e.brushes.push_back(getBrush(c, pos));
 		check(getToken(c, pos), RBRACE);
 		*pos += 1;
 	}
 
-	if (getToken(c, pos) == END_OF_INPUT) return;
+	if (getToken(c, pos) == END_OF_INPUT) { // TODO: Needed?
+		return { };
+	}; 
 
 	check(getToken(c, pos), RBRACE); *pos += 1;
+
+	return e;
 }
 
 Map getMap(char* mapData, size_t mapDataLength)
 {
 	Map map = {};
-	std::vector<Face> faces;
 
 	int pos = 0;
-
 	while (getToken(&mapData[0], &pos) == LBRACE) {
 		pos++;
-		getEntity(&mapData[0], &pos);
+		map.entities.push_back(getEntity(&mapData[0], &pos));
 	}
-
-	map.faces = faces;
 	
 	return map;
 }
