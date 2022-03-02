@@ -9,24 +9,6 @@
 #include "polysoup.h"
 
 
-struct Vertex
-{
-	double x, y, z;
-};
-
-struct TextureData
-{
-	std::string name;
-	double xOffset, yOffset;
-	double rotation;
-	double xScale, yScale;
-};
-
-struct Face
-{
-	std::vector<Vertex> vertices;
-	TextureData texData;
-};
 
 enum TokenType
 {
@@ -42,12 +24,49 @@ enum TokenType
 	END_OF_INPUT
 };
 
+
 struct Token
 {
 	TokenType type;
-	union {
-		Face face;
-	};
+};
+
+struct Vertex
+{
+	double x, y, z;
+};
+
+struct TextureData
+{
+	std::string name;
+	double xOffset, yOffset;
+	double rotation;
+	double xScale, yScale;
+};
+
+struct Face
+{
+	std::vector<Vertex> vertices; // define the plane
+	std::string textureName;
+	double xOffset, yOffset;
+	double rotation;
+	double xScale, yScale;
+};
+
+struct Brush
+{
+	std::vector<Face> faces;
+};
+
+struct Property
+{
+	std::string key;
+	std::string value;
+};
+
+struct Entity
+{
+	std::vector<Property> properties;
+	std::vector<Brush>    brushes;
 };
 
 struct Map
@@ -174,7 +193,7 @@ TokenType getToken(char* c, int* pos)
 	else if (*cur >= '0' && *cur <= '9' || *cur == '-') { // TODO: MINUS own token and check again if really NUMBER
 		result = NUMBER;
 	}
-	else if (*cur >= 'A' && *cur <= 'z') {
+	else if (*cur >= 0x21 && *cur <= 0x7E) { // '!' - '~'
 		result = TEXNAME;
 	}
 	else {
@@ -196,7 +215,9 @@ std::string tokenToString(TokenType tokenType)
 	case NUMBER: return "NUMBER"; break;
 	case STRING: return "STRING"; break;
 	case COMMENT: return "COMMENT"; break;
-	default: return std::string("");
+	case TEXNAME: return "TEXNAME"; break;
+	case UNKNOWN: return "UNKNOWN"; break;
+	default: return std::string("!!! H E L P !!!");
 	}
 }
 
@@ -286,7 +307,7 @@ void getProperty(char* c, int* pos)
 	std::string value = getString(c, pos);
 }
 
-void getBrush(char* c, int* pos) 
+void getFace(char* c, int* pos) 
 {
 	for (size_t i = 0; i < 3; ++i) {
 		check(getToken(c, pos), LPAREN); *pos += 1;
@@ -313,19 +334,27 @@ void getBrush(char* c, int* pos)
 	double yScale = getNumber(c, pos);
 }
 
+void getBrush(char* c, int* pos)
+{
+	while (getToken(c, pos) == LPAREN) {
+		getFace(c, pos);
+	}
+}
+
+/** 
+* I assume that the grammar does not allow a property *before* a brush!
+*/
 void getEntity(char* c, int* pos)
 {
 	while (getToken(c, pos) == STRING) {
 		getProperty(c, pos);
 	}
 
-	while (getToken(c, pos) == LPAREN) {
-		getBrush(c, pos);
-	}
-
 	while (getToken(c, pos) == LBRACE) {
 		*pos += 1;
-		getEntity(c, pos);
+		getBrush(c, pos);
+		check(getToken(c, pos), RBRACE);
+		*pos += 1;
 	}
 
 	if (getToken(c, pos) == END_OF_INPUT) return;
@@ -340,8 +369,10 @@ Map getMap(char* mapData, size_t mapDataLength)
 
 	int pos = 0;
 
-	check(getToken(&mapData[0], &pos), LBRACE);
-	getEntity(&mapData[0], &pos);
+	while (getToken(&mapData[0], &pos) == LBRACE) {
+		pos++;
+		getEntity(&mapData[0], &pos);
+	}
 
 	map.faces = faces;
 	
