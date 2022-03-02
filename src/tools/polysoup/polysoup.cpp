@@ -45,7 +45,7 @@ struct TextureData
 
 struct Face
 {
-	std::vector<Vertex> vertices; // define the plane
+	Vertex vertices[3];     // Define the plane.
 	std::string textureName;
 	double xOffset, yOffset;
 	double rotation;
@@ -72,10 +72,8 @@ struct Entity
 struct Map
 {
 	std::vector<Entity> entities;
-	// TODO: Other entities with properties such as: "classname" -> "info_player_start"
 };
 
-static std::vector<TokenType> g_Tokens;
 static int                    g_InputLength;
 
 static std::string loadTextFile(std::string file)
@@ -175,14 +173,12 @@ TokenType getToken(char* c, int* pos)
 
 	if (*cur == '{') {
 		result = LBRACE;
-		g_Tokens.push_back(result);
 	}
 	else if (*cur == '}') {
 		result = RBRACE;
 	}
 	else if (*cur == '(') {
 		result = LPAREN;
-		g_Tokens.push_back(result);
 	}
 	else if (*cur == ')') {
 		result = RPAREN;
@@ -220,20 +216,6 @@ std::string tokenToString(TokenType tokenType)
 	default: return std::string("!!! H E L P !!!");
 	}
 }
-
-//TokenType matchToken(char* c, int* pos)
-//{
-//	advanceToNextNonWhitespace(&c, pos);
-//	while (*c == '/') { // Skip over all comments
-//		advanceToNextLine(&c, pos);
-//		advanceToNextNonWhitespace(&c, pos);
-//	}
-//
-//	TokenType got = getToken(c, pos);
-//	c++; *pos += 1;
-//
-//	return got;
-//}
 
 bool check(TokenType got, TokenType expected)
 {
@@ -322,7 +304,7 @@ Face getFace(char* c, int* pos)
 		check(getToken(c, pos), NUMBER);
 		double z = getNumber(c, pos);
 		check(getToken(c, pos), RPAREN); *pos += 1;
-		face.vertices.push_back({ x, y, z });
+		face.vertices[i] = {x, y, z};
 	}
 
 	check(getToken(c, pos), TEXNAME);
@@ -404,7 +386,6 @@ int main(int argc, char** argv)
 	Map map = getMap(&mapData[0], inputLength);
 	
 	printf("done!\n");
-	//getchar();
 
 	return 0;
 }
