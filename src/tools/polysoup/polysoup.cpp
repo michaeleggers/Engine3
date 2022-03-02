@@ -352,7 +352,7 @@ Brush getBrush(char* c, int* pos)
 }
 
 /** 
-* I assume that the grammar does not allow a property *before* a brush!
+* I assume that the grammar does not allow a brush *before* a property within an entity!
 */
 Entity getEntity(char* c, int* pos)
 {
