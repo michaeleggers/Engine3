@@ -54,12 +54,9 @@ int main(int argc, char** argv)
 		fprintf(stderr, "No .map provided! Usage:\npolysoup <mapfile>");
 		exit(-1);
 	}
-	int pos = 0;
-	int steps = 10;
 
 	std::string mapData = loadTextFile(argv[1]);
 	size_t inputLength = mapData.length();
-	size_t inputSizeInBytes = mapData.size();
 	Map map = getMap(&mapData[0], inputLength);
 	
 	printf("done!\n");

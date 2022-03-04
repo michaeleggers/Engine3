@@ -24,11 +24,6 @@ enum TokenType
 	END_OF_INPUT
 };
 
-struct Token
-{
-	TokenType type;
-};
-
 struct Vertex
 {
 	double x, y, z;
@@ -88,6 +83,7 @@ Map getMap(char* mapData, size_t mapDataLength);
 #if defined(MAP_PARSER_IMPLEMENTATION)
 
 static int g_InputLength;
+static int g_LineNo;
 
 static int advanceCursor(int* pos, int steps)
 {
@@ -114,11 +110,11 @@ static void advanceToNextWhitespaceOrLinebreak(char** c, int* pos)
 	}
 }
 
-static void skipLinebreak(char* c, int* pos)
+static void skipLinebreaks(char* c, int* pos)
 {
 	char* cur = c + *pos;
 	while (*cur == '\r' || *cur == '\n') {
-		cur++; *pos += 1;
+		cur++; *pos += 1; g_LineNo++;
 	}
 }
 
@@ -134,6 +130,7 @@ static void advanceToNextLine(char* c, int* pos)
 	if (*cur == '\n') {
 		cur++; *pos += 1;
 	}
+	g_LineNo++;
 }
 
 static std::string getString(char* c, int* pos)
@@ -159,7 +156,7 @@ static TokenType getToken(char* c, int* pos)
 	TokenType result = UNKNOWN;
 
 	advanceToNextNonWhitespace(c, pos);
-	skipLinebreak(c, pos);
+	skipLinebreaks(c, pos);
 
 	while (*(c + *pos) == '/') { // Skip over all comments
 		advanceToNextLine(c, pos);
@@ -210,7 +207,7 @@ static std::string tokenToString(TokenType tokenType)
 	case COMMENT: return "COMMENT"; break;
 	case TEXNAME: return "TEXNAME"; break;
 	case UNKNOWN: return "UNKNOWN"; break;
-	default: return std::string("!!! H E L P !!!");
+	default: return "!!! H E L P !!!";
 	}
 }
 
@@ -327,6 +324,12 @@ static Brush getBrush(char* c, int* pos)
 	while (getToken(c, pos) == LPAREN) {
 		brush.faces.push_back(getFace(c, pos));
 	}
+
+	int faceCount = brush.faces.size();
+	if (faceCount < 6) {
+		fprintf(stderr, "WARNING (Line %d): Brush found with only %d faces!\n", g_LineNo, faceCount);
+	}
+
 	return brush;
 }
 
@@ -348,10 +351,6 @@ static Entity getEntity(char* c, int* pos)
 		*pos += 1;
 	}
 
-	if (getToken(c, pos) == END_OF_INPUT) { // TODO: Needed?
-		return { };
-	};
-
 	check(getToken(c, pos), RBRACE); *pos += 1;
 
 	return e;
@@ -362,6 +361,7 @@ Map getMap(char* mapData, size_t mapDataLength)
 	Map map = {};
 
 	g_InputLength = mapDataLength;
+	g_LineNo = 0;
 	int pos = 0;
 	while (getToken(&mapData[0], &pos) == LBRACE) {
 		pos++;
