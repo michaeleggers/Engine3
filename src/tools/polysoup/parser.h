@@ -217,9 +217,9 @@ static std::string tokenToString(TokenType tokenType)
 static bool check(TokenType got, TokenType expected)
 {
 	if (expected != got) {
-		fprintf(stderr, "ERROR: Expected Token: %s, but got: %s\n",
-			tokenToString(expected).c_str(), tokenToString(got).c_str());
-		return false;
+		fprintf(stderr, "ERROR: Expected Token: %s, but got: %s in line %d\n",
+			tokenToString(expected).c_str(), tokenToString(got).c_str(), g_LineNo);
+		exit(-1);
 	}
 
 	return true;
@@ -362,8 +362,9 @@ Map getMap(char* mapData, size_t mapDataLength)
 	Map map = {};
 
 	g_InputLength = mapDataLength;
-	g_LineNo = 0;
+	g_LineNo = 1; // Editors often start at line 1
 	int pos = 0;
+	check(getToken(&mapData[0], &pos), LBRACE); // Map file must start with an entity!
 	while (getToken(&mapData[0], &pos) == LBRACE) {
 		pos++;
 		map.entities.push_back(getEntity(&mapData[0], &pos));

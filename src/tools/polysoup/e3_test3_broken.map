@@ -1,0 +1,15 @@
+// Game: Generic
+// Format: Standard
+// entity 0
+{
+"classname" "worldspawn"
+"_tb_textures" "textures"
+// brush 0
+{
+( -64 64 -16 ) ( -64 64 16 ) ( -64 -64 -16 ) techwall2_grey1 4.5993724 -0.41498184 0 1 1.0723771
+( -64 64 16  ( 64 64 16 ) ( 64 -64 -16 ) techwall2_grey1 0 0 0 1 1
+( 64 -64 -16 ) ( 64 64 -16 ) ( -64 64 -16 ) techwall2_grey1 0 0 0 1 1
+( 64 64 -16 ) ( 64 64 16 ) ( -64 64 16 ) techwall2_grey1 0 0 0 1 1
+( 64 -64 -16 ) ( 64 64 16 ) ( 64 64 -16 ) techwall2_grey1 4.5993724 -0.41498184 0 1 1.0723771
+}
+}
