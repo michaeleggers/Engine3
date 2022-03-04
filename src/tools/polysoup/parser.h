@@ -225,8 +225,6 @@ static bool check(TokenType got, TokenType expected)
 	return true;
 }
 
-
-
 static double parseNumber(char* c, int* pos)
 {
 	char* cur = c + *pos;
