@@ -24,6 +24,7 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <set>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -35,9 +36,20 @@
 #define MAP_PARSER_IMPLEMENTATION
 #include "parser.h"
 
+#define PS_FLOAT_EPSILON	(0.0001f)
+
+
+
 struct Polygon
 {
-	std::vector<glm::vec3> v;
+	std::vector<glm::vec3> vertices;
+};
+
+struct Plane
+{
+	glm::vec3 n;
+	glm::vec3 p0;
+	float d;		// = n dot p0. Just for convenience.
 };
 
 static std::string loadTextFile(std::string file)
@@ -56,13 +68,65 @@ static std::string loadTextFile(std::string file)
 	return data;
 }
 
-Polygon createPolygon(Vertex f[], Vertex f2[], Polygon& poly)
+Plane createPlane(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2)
 {
-	glm::vec3 v0 = glm::vec3(f[0].x, f[0].y, f[0].z);
-	glm::vec3 v1 = glm::vec3(f[1].x, f[1].y, f[1].z);
-	glm::vec3 v2 = glm::vec3(f[2].x, f[2].y, f[2].z);
+	glm::vec3 v0 = p2 - p0;
+	glm::vec3 v1 = p1 - p0;
+	glm::vec3 n = glm::normalize(glm::cross(v0, v1));
+	float d = glm::dot(n, p0);
 
-	return {};
+	return { n, p0, d };
+}
+
+static inline glm::vec3 convertVertexToVec3(Vertex v)
+{
+	return glm::vec3(v.x, v.y, v.z);
+}
+
+Plane convertFaceToPlane(Face face)
+{
+	glm::vec3 p0 = convertVertexToVec3(face.vertices[0]);
+	glm::vec3 p1 = convertVertexToVec3(face.vertices[1]);
+	glm::vec3 p2 = convertVertexToVec3(face.vertices[2]);
+	return createPlane(p0, p1, p2);
+}
+
+bool intersectThreePlanes(Plane p0, Plane p1, Plane p2, glm::vec3* intersectionPoint)
+{	
+	glm::vec3 n1xn2 = glm::cross(p0.n, p1.n);
+	float det = glm::dot(n1xn2, p2.n);
+
+	if (fabs(det) < PS_FLOAT_EPSILON) // Early out if planes do not intersect at single point
+		return false;
+
+	*intersectionPoint = (
+		p0.d * (glm::cross(p2.n, p1.n))
+		+ p1.d * (glm::cross(p0.n, p2.n))
+		+ p2.d * (glm::cross(p1.n, p0.n))
+		) / det;
+
+	return true;
+}
+
+bool vec3IsEqual(const glm::vec3& lhs, const glm::vec3& rhs) {
+	return ( (lhs.x == rhs.x) && (lhs.y == rhs.y) && (lhs.z == rhs.z) );
+}
+
+void insertVertexToPolygon(glm::vec3 v, Polygon* p)
+{
+	auto v0 = p->vertices.begin();
+	if (v0 == p->vertices.end()) {
+		p->vertices.push_back(v);
+		return;
+	}
+
+	for (; v0 != p->vertices.end(); v0++) {
+		if (vec3IsEqual(v, *v0)) {
+			return;
+		}
+	}
+	
+	p->vertices.push_back(v);
 }
 
 std::vector<Polygon> createPolysoup(Map map)
@@ -70,10 +134,19 @@ std::vector<Polygon> createPolysoup(Map map)
 	std::vector<Polygon> polys;
 	for (auto e = map.entities.begin(); e != map.entities.end(); e++) {
 		for (auto b = e->brushes.begin(); b != e->brushes.end(); b++) {
-			for (auto f = b->faces.begin(); f != b->faces.end(); f++) {
+			for (auto f0 = b->faces.begin(); f0 != b->faces.end(); f0++) {
 				Polygon poly = {};
-				for (auto f2 = b->faces.begin(); f2 != b->faces.end(); f2++) {
-					createPolygon(f->vertices, f2->vertices, poly);
+				for (auto f1 = b->faces.begin(); f1 != b->faces.end(); f1++) {
+					for (auto f2 = b->faces.begin(); f2 != b->faces.end(); f2++) {
+						glm::vec3 intersectionPoint;
+						Plane p0 = convertFaceToPlane(*f0);
+						Plane p1 = convertFaceToPlane(*f1);
+						Plane p2 = convertFaceToPlane(*f2);
+						if (intersectThreePlanes(p0, p1, p2, &intersectionPoint)) {
+							//poly.vertices.push_back(intersectionPoint);
+							insertVertexToPolygon(intersectionPoint, &poly);
+						}
+					}
 				}
 				polys.push_back(poly);
 			}
