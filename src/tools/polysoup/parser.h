@@ -99,6 +99,9 @@ static void advanceToNextNonWhitespace(char* c, int* pos)
 {
 	char* cur = c + *pos;
 	while (isspace(*cur)) {
+		if (*cur == '\n') { // TODO: Get Env-Newline?
+			g_LineNo++;
+		}
 		cur++; *pos += 1;
 	}
 }
@@ -129,8 +132,8 @@ static void advanceToNextLine(char* c, int* pos)
 	}
 	if (*cur == '\n') {
 		cur++; *pos += 1;
+		g_LineNo++;
 	}
-	g_LineNo++;
 }
 
 static std::string getString(char* c, int* pos)
