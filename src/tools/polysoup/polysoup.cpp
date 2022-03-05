@@ -26,6 +26,7 @@
 #include <sstream>
 #include <vector>
 #include <set>
+#include <algorithm>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -45,6 +46,12 @@
 struct Polygon
 {
 	std::vector<glm::vec3> vertices;
+};
+
+struct IndexedPolygon
+{
+	std::vector<glm::vec3> vertices;
+	std::vector<uint16_t>  indices;
 };
 
 struct Plane
@@ -87,7 +94,7 @@ static void writePolys(std::string fileName, std::vector<Polygon> polys)
 	oFileStream.close();
 }
 
-static void writePolysOBJ(std::string fileName, std::vector<Polygon> polys)
+static void writePolysOBJ(std::string fileName, std::vector<IndexedPolygon> polys)
 {
 	std::stringstream faces;
 	std::ofstream oFileStream;
@@ -95,19 +102,17 @@ static void writePolysOBJ(std::string fileName, std::vector<Polygon> polys)
 	
 	oFileStream << "o Quake-map" << std::endl;
 
-	size_t count = 1;
 	for (auto p = polys.begin(); p != polys.end(); p++) {
-		faces << "f";
 		for (auto v = p->vertices.begin(); v != p->vertices.end(); v++) {
 			oFileStream << "v " << std::to_string(v->x) << " " << std::to_string(v->y) << " " << std::to_string(v->z) << std::endl;
-			faces << " " << count; count++;
 		}
-		faces << std::endl;
+		for (auto i = p->indices.begin(); i != p->indices.end(); i += 3) {
+			faces << "f " << *i + 1<< " " << *(i + 1) + 1 << " " << *(i + 2) + 1 << std::endl;
+		}
 	}
 
 	oFileStream << faces.rdbuf();
-	oFileStream.close();
-	
+	oFileStream.close();	
 }
 
 Plane createPlane(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2)
@@ -150,7 +155,8 @@ bool intersectThreePlanes(Plane p0, Plane p1, Plane p2, glm::vec3* intersectionP
 	return true;
 }
 
-bool vec3IsEqual(const glm::vec3& lhs, const glm::vec3& rhs) {
+bool vec3IsEqual(const glm::vec3& lhs, const glm::vec3& rhs) 
+{
 	return ( (lhs.x == rhs.x) && (lhs.y == rhs.y) && (lhs.z == rhs.z) );
 }
 
@@ -169,6 +175,24 @@ void insertVertexToPolygon(glm::vec3 v, Polygon* p)
 	}
 	
 	p->vertices.push_back(v);
+}
+
+uint16_t insertVertexToIndexedPolygon(glm::vec3 v, IndexedPolygon* p)
+{
+	auto v0 = p->vertices.begin();
+	if (v0 == p->vertices.end()) {
+		p->vertices.push_back(v);
+		return 0;
+	}
+
+	for (; v0 != p->vertices.end(); v0++) {
+		if (vec3IsEqual(v, *v0)) {
+			return v0 - p->vertices.begin();
+		}
+	}
+
+	p->vertices.push_back(v);
+	return p->vertices.size() - 1;
 }
 
 std::vector<Polygon> createPolysoup(Map map)
@@ -216,26 +240,30 @@ std::vector<Polygon> createPolysoup(Map map)
 * 
 * TODO: Fix this with indexed data.
 */
-std::vector<Polygon> triangulate(std::vector<Polygon> polys)
+std::vector<IndexedPolygon> triangulate(std::vector<Polygon> polys)
 {
-	std::vector<Polygon> tris = { };
+	std::vector<IndexedPolygon> tris = { };
 
+	uint16_t baseIdx = 0;
+	IndexedPolygon poly = { };
 	for (auto p = polys.begin(); p != polys.end(); p++) {
-		size_t vertCount = p->vertices.size();
-		if (vertCount > 3) {
-			glm::vec3 provokingVert = p->vertices[0];
-			for (size_t i = 2; i < vertCount; i++) {
-				Polygon poly = { };
-				poly.vertices.push_back(provokingVert);
-				poly.vertices.push_back(p->vertices[i - 1]);
-				poly.vertices.push_back(p->vertices[i]);
-				tris.push_back(poly);
-			}
+		glm::vec3 provokingVert = p->vertices[0];
+		size_t vertCount = p->vertices.size();		
+		for (size_t i = 2; i < vertCount; i++) {
+			//poly.vertices.push_back(provokingVert);
+			uint16_t idx0 = insertVertexToIndexedPolygon(provokingVert, &poly);
+			//poly.vertices.push_back(p->vertices[i - 1]);
+			//poly.vertices.push_back(p->vertices[i]);
+			uint16_t idx1 = insertVertexToIndexedPolygon(p->vertices[i-1], &poly);
+			uint16_t idx2 = insertVertexToIndexedPolygon(p->vertices[i], &poly);
+
+			poly.indices.push_back(idx0);
+			poly.indices.push_back(idx1);
+			poly.indices.push_back(idx2);
 		}
-		else {
-			tris.push_back(*p);	
-		}		
+		baseIdx += 3;
 	}
+	tris.push_back(poly);
 
 	return tris;
 }
@@ -251,8 +279,8 @@ int main(int argc, char** argv)
 	size_t inputLength = mapData.length();
 	Map map = getMap(&mapData[0], inputLength);
 	std::vector<Polygon> polysoup = createPolysoup(map);
-	std::vector<Polygon> tris = triangulate(polysoup);
-	writePolys("tris.bin", tris);
+	std::vector<IndexedPolygon> tris = triangulate(polysoup);
+	//writePolys("tris.bin", tris);
 	writePolysOBJ("tris.obj", tris);
 
 	printf("done!\n");
