@@ -22,11 +22,13 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <ostream>
 #include <sstream>
 #include <vector>
 #include <set>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
@@ -66,6 +68,23 @@ static std::string loadTextFile(std::string file)
 	iFileStream.close();
 
 	return data;
+}
+
+static void writePolys(std::string fileName, std::vector<Polygon> polys)
+{
+	std::ofstream oFileStream;
+	oFileStream.open(fileName, std::ios::binary | std::ios::out);
+
+	uint32_t numPolys = polys.size();
+	oFileStream.write((char*)&numPolys, sizeof(uint32_t));
+
+	for (auto p = polys.begin(); p != polys.end(); p++) {
+		for (auto v = p->vertices.begin(); v != p->vertices.end(); v++) {
+			oFileStream.write((char*) & *v, sizeof(glm::vec3));
+		}
+	}
+
+	oFileStream.close();
 }
 
 Plane createPlane(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2)
@@ -210,6 +229,7 @@ int main(int argc, char** argv)
 	Map map = getMap(&mapData[0], inputLength);
 	std::vector<Polygon> polysoup = createPolysoup(map);
 	std::vector<Polygon> tris = triangulate(polysoup);
+	writePolys("tris.bin", tris);
 
 	printf("done!\n");
 
