@@ -156,6 +156,48 @@ std::vector<Polygon> createPolysoup(Map map)
 	return polys;
 }
 
+/*
+* Assumes only convex polygons -> use trivial triangulation approach where
+* a triangle-fan gets built, eg:
+* 
+*       v2______v3                       v2______v3
+*       /       |                         /|     /|
+*      /        |                        / |    / |
+*   v1/         |       -->           v1/  |   /  |
+*     \         |                       \  |  /   |
+*      \        |                        \ | /    | 
+*       \_______|                         \|/_____|
+*        v0     v4                         v0     v4     
+* 
+* v0 is the 'provoking vertex'. It is the ankor-point of the triangle fan.
+* Note that a lot of redundant data is generated: (v0, v1, v2), (v0, v2, v3), (v0, v3, v4).
+* 
+* TODO: Fix this with indexed data.
+*/
+std::vector<Polygon> triangulate(std::vector<Polygon> polys)
+{
+	std::vector<Polygon> tris = { };
+	for (auto p = polys.begin(); p != polys.end(); p++) {
+		
+		size_t vertCount = p->vertices.size();
+		if (vertCount > 3) {
+			glm::vec3 provokingVert = p->vertices[0];
+			for (size_t i = 2; i < vertCount; i++) {
+				Polygon poly = { };
+				poly.vertices.push_back(provokingVert);
+				poly.vertices.push_back(p->vertices[i - 1]);
+				poly.vertices.push_back(p->vertices[i]);
+				tris.push_back(poly);
+			}
+		}
+		else {
+			tris.push_back(*p);	
+		}		
+	}
+
+	return tris;
+}
+
 int main(int argc, char** argv)
 {
 	if (argc < 2) {
@@ -166,7 +208,8 @@ int main(int argc, char** argv)
 	std::string mapData = loadTextFile(argv[1]);
 	size_t inputLength = mapData.length();
 	Map map = getMap(&mapData[0], inputLength);
-	auto polysoup = createPolysoup(map);
+	std::vector<Polygon> polysoup = createPolysoup(map);
+	std::vector<Polygon> tris = triangulate(polysoup);
 
 	printf("done!\n");
 
