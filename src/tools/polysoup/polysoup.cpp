@@ -87,6 +87,29 @@ static void writePolys(std::string fileName, std::vector<Polygon> polys)
 	oFileStream.close();
 }
 
+static void writePolysOBJ(std::string fileName, std::vector<Polygon> polys)
+{
+	std::stringstream faces;
+	std::ofstream oFileStream;
+	oFileStream.open(fileName, std::ios::out);
+	
+	oFileStream << "o Quake-map" << std::endl;
+
+	size_t count = 1;
+	for (auto p = polys.begin(); p != polys.end(); p++) {
+		faces << "f";
+		for (auto v = p->vertices.begin(); v != p->vertices.end(); v++) {
+			oFileStream << "v " << std::to_string(v->x) << " " << std::to_string(v->y) << " " << std::to_string(v->z) << std::endl;
+			faces << " " << count; count++;
+		}
+		faces << std::endl;
+	}
+
+	oFileStream << faces.rdbuf();
+	oFileStream.close();
+	
+}
+
 Plane createPlane(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2)
 {
 	glm::vec3 v0 = p2 - p0;
@@ -196,8 +219,8 @@ std::vector<Polygon> createPolysoup(Map map)
 std::vector<Polygon> triangulate(std::vector<Polygon> polys)
 {
 	std::vector<Polygon> tris = { };
+
 	for (auto p = polys.begin(); p != polys.end(); p++) {
-		
 		size_t vertCount = p->vertices.size();
 		if (vertCount > 3) {
 			glm::vec3 provokingVert = p->vertices[0];
@@ -230,6 +253,7 @@ int main(int argc, char** argv)
 	std::vector<Polygon> polysoup = createPolysoup(map);
 	std::vector<Polygon> tris = triangulate(polysoup);
 	writePolys("tris.bin", tris);
+	writePolysOBJ("tris.obj", tris);
 
 	printf("done!\n");
 
