@@ -188,7 +188,7 @@ std::vector<Polygon> createPolysoup(Map map)
 *       \_______|                         \|/_____|
 *        v0     v4                         v0     v4     
 * 
-* v0 is the 'provoking vertex'. It is the ankor-point of the triangle fan.
+* v0 is the 'provoking vertex'. It is the anchor-point of the triangle fan.
 * Note that a lot of redundant data is generated: (v0, v1, v2), (v0, v2, v3), (v0, v3, v4).
 * 
 * TODO: Fix this with indexed data.
