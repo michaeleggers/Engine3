@@ -160,7 +160,7 @@ std::vector<Polygon> createPolysoup(Map map)
 * Assumes only convex polygons -> use trivial triangulation approach where
 * a triangle-fan gets built, eg:
 * 
-*       v2______v3                       v2______v3
+*       v2______v3                        v2______v3
 *       /       |                         /|     /|
 *      /        |                        / |    / |
 *   v1/         |       -->           v1/  |   /  |
