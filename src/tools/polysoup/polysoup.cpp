@@ -26,6 +26,8 @@
 #include <sstream>
 #include <vector>
 #include <set>
+#include <stack>
+#include <algorithm>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -198,6 +200,38 @@ std::vector<Polygon> createPolysoup(Map map)
 	return polys;
 }
 
+Polygon sortVerticesCCW(Polygon poly)
+{
+	Polygon result;
+	size_t vertCount = poly.vertices.size();
+	
+	if (vertCount < 3)
+		return poly; // Actually not a valid polygon
+
+	// Center of poly
+	glm::vec3 center(0.0f);
+	for (auto v = poly.vertices.begin(); v != poly.vertices.end(); v++) {
+		center += *v;
+	}
+	center /= vertCount;
+
+	glm::vec3 v0 = poly.vertices[0];
+	glm::vec3 a = glm::normalize(v0 - center);
+	float smallestAngle = glm::pi<float>();
+	glm::vec3 closestVertex;
+	for (size_t i = 1; i < vertCount; i++) {
+		glm::vec3 v1 = poly.vertices[i];
+		glm::vec3 b = glm::normalize(v1 - center);
+		float angle = glm::acos(glm::dot(a, b));
+		if (angle < smallestAngle) {
+			smallestAngle = angle;
+			closestVertex = v1;
+		}
+	}
+
+	return result;
+}
+
 /*
 * Assumes only convex polygons -> use trivial triangulation approach where
 * a triangle-fan gets built, eg:
@@ -221,19 +255,15 @@ std::vector<Polygon> triangulate(std::vector<Polygon> polys)
 	std::vector<Polygon> tris = { };
 
 	for (auto p = polys.begin(); p != polys.end(); p++) {
-		size_t vertCount = p->vertices.size();
-		if (vertCount > 3) {
-			glm::vec3 provokingVert = p->vertices[0];
-			for (size_t i = 2; i < vertCount; i++) {
-				Polygon poly = { };
-				poly.vertices.push_back(provokingVert);
-				poly.vertices.push_back(p->vertices[i - 1]);
-				poly.vertices.push_back(p->vertices[i]);
-				tris.push_back(poly);
-			}
-		}
-		else {
-			tris.push_back(*p);	
+		Polygon sortedPoly = sortVerticesCCW(*p);
+		size_t vertCount = sortedPoly.vertices.size();		
+		glm::vec3 provokingVert = sortedPoly.vertices[0];
+		for (size_t i = 2; i < vertCount; i++) {
+			Polygon poly = { };
+			poly.vertices.push_back(provokingVert);
+			poly.vertices.push_back(sortedPoly.vertices[i - 1]);
+			poly.vertices.push_back(sortedPoly.vertices[i]);
+			tris.push_back(poly);
 		}		
 	}
 
