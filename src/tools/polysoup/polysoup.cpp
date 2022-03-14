@@ -47,6 +47,7 @@
 struct Polygon
 {
 	std::vector<glm::vec3> vertices;
+	glm::vec3			   normal;
 };
 
 struct Plane
@@ -179,11 +180,12 @@ std::vector<Polygon> createPolysoup(Map map)
 	for (auto e = map.entities.begin(); e != map.entities.end(); e++) {
 		for (auto b = e->brushes.begin(); b != e->brushes.end(); b++) {
 			for (auto f0 = b->faces.begin(); f0 != b->faces.end(); f0++) {
+				Plane p0 = convertFaceToPlane(*f0);
 				Polygon poly = {};
+				poly.normal = p0.n;
 				for (auto f1 = b->faces.begin(); f1 != b->faces.end(); f1++) {
 					for (auto f2 = b->faces.begin(); f2 != b->faces.end(); f2++) {
 						glm::vec3 intersectionPoint;
-						Plane p0 = convertFaceToPlane(*f0);
 						Plane p1 = convertFaceToPlane(*f1);
 						Plane p2 = convertFaceToPlane(*f2);
 						if (intersectThreePlanes(p0, p1, p2, &intersectionPoint)) {
@@ -198,6 +200,26 @@ std::vector<Polygon> createPolysoup(Map map)
 	}
 
 	return polys;
+}
+
+bool isAngleLegal(glm::vec3 center, glm::vec3 v0, glm::vec3 v1)
+{
+	Plane polyPlane = createPlane(center, v0, v1);
+	glm::vec3 b = glm::normalize(v1 - center);
+	Plane p = createPlane(center, v0, center + polyPlane.n);
+	if (glm::dot(p.n, b) < 0) {
+		return false;
+	}
+
+	return true;
+}
+
+float getAngle(glm::vec3 center, glm::vec3 v0, glm::vec3 v1)
+{
+	glm::vec3 a = glm::normalize(v0 - center);
+	glm::vec3 b = glm::normalize(v1 - center);
+
+	return glm::acos(glm::dot(a, b));
 }
 
 Polygon sortVerticesCCW(Polygon poly)
@@ -215,21 +237,24 @@ Polygon sortVerticesCCW(Polygon poly)
 	}
 	center /= vertCount;
 
-	glm::vec3 v0 = poly.vertices[0];
-	glm::vec3 a = glm::normalize(v0 - center);
-	float smallestAngle = glm::pi<float>();
-	glm::vec3 closestVertex;
-	for (size_t i = 1; i < vertCount; i++) {
-		glm::vec3 v1 = poly.vertices[i];
-		glm::vec3 b = glm::normalize(v1 - center);
-		float angle = glm::acos(glm::dot(a, b));
-		if (angle < smallestAngle) {
-			smallestAngle = angle;
-			closestVertex = v1;
+	size_t closestVertexID = 0;
+	for (size_t i = 0; i < vertCount-3; i++) {
+		glm::vec3 v0 = poly.vertices[i]; // Find next vertex to v0 with smallest angle
+		size_t smallesAngleIndex = 0;
+		float smallestAngle = glm::two_pi<float>();
+		for (size_t j = i+1; j < vertCount-1; j++) {
+			if (isAngleLegal(center, v0, poly.vertices[j])) {
+				float angle = getAngle(center, v0, poly.vertices[j]);
+				if (angle < smallestAngle) {
+					smallestAngle = angle;
+					smallesAngleIndex = j;
+				}
+			}
 		}
+		std::swap(poly.vertices[i+1], poly.vertices[smallesAngleIndex]); // Vertex number j+1 has a smaller angle than the one coming befor it -> swap
 	}
 
-	return result;
+	return poly;
 }
 
 /*
