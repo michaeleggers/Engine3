@@ -1,0 +1,16 @@
+// Game: Generic
+// Format: Standard
+// entity 0
+{
+"classname" "worldspawn"
+"_tb_textures" "textures"
+// brush 0
+{
+( 16 -112 96 ) ( 16 -192 96 ) ( 16 -192 0 ) techflat1_blu1 -144 176 90 1 1
+( 16 -112 96 ) ( 32 -112 112 ) ( 32 -192 112 ) techflat1_blu1 16 176 0 1 -1
+( 16 -192 96 ) ( 32 -192 112 ) ( 32 -192 0 ) techflat1_blu1 16 144 0 1 1
+( 32 -192 0 ) ( 32 -112 0 ) ( 16 -112 0 ) techflat1_blu1 16 176 0 1 -1
+( 32 -112 0 ) ( 32 -112 112 ) ( 16 -112 96 ) techflat1_blu1 16 144 0 1 1
+( 32 -192 112 ) ( 32 -112 112 ) ( 32 -112 0 ) techflat1_blu1 -144 176 0 1 1
+}
+}

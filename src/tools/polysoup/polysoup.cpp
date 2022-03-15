@@ -166,12 +166,26 @@ void insertVertexToPolygon(glm::vec3 v, Polygon* p)
 	}
 
 	for (; v0 != p->vertices.end(); v0++) {
-		if (vec3IsEqual(v, *v0)) {
+		if (vec3IsEqual(v, *v0)) { // TODO: Is this check actually needed??
 			return;
 		}
 	}
 	
 	p->vertices.push_back(v);
+}
+
+bool isPointValid(Brush brush, glm::vec3 intersectionPoint)
+{
+	for (int i = 0; i < brush.faces.size(); i++) {
+		Face face = brush.faces[i];
+		Plane plane = convertFaceToPlane(face);
+		glm::vec3 a = glm::normalize(intersectionPoint - plane.p0);
+		float dotProd = glm::dot(plane.n, a);
+		if (glm::dot(plane.n, a) > 0)
+			return false;
+	}
+
+	return true;
 }
 
 std::vector<Polygon> createPolysoup(Map map)
@@ -184,17 +198,20 @@ std::vector<Polygon> createPolysoup(Map map)
 				Polygon poly = {};
 				poly.normal = p0.n;
 				for (auto f1 = b->faces.begin(); f1 != b->faces.end(); f1++) {
+					Plane p1 = convertFaceToPlane(*f1);
 					for (auto f2 = b->faces.begin(); f2 != b->faces.end(); f2++) {
 						glm::vec3 intersectionPoint;
-						Plane p1 = convertFaceToPlane(*f1);
 						Plane p2 = convertFaceToPlane(*f2);
 						if (intersectThreePlanes(p0, p1, p2, &intersectionPoint)) {
 							//poly.vertices.push_back(intersectionPoint);
-							insertVertexToPolygon(intersectionPoint, &poly);
+							if (isPointValid(*b, intersectionPoint)) {
+								insertVertexToPolygon(intersectionPoint, &poly);
+							}
 						}
 					}
 				}
-				polys.push_back(poly);
+				if (poly.vertices.size() > 0)
+					polys.push_back(poly);
 			}
 		}
 	}
@@ -253,6 +270,13 @@ Polygon sortVerticesCCW(Polygon poly)
 		}
 		std::swap(poly.vertices[i+1], poly.vertices[smallesAngleIndex]); // Vertex number j+1 has a smaller angle than the one coming befor it -> swap
 	}
+
+	//glm::vec3 a = poly.vertices[1] - poly.vertices[0];
+	//glm::vec3 b = poly.vertices[2] - poly.vertices[0];
+	//glm::vec3 normal = glm::normalize(glm::cross(b, a));
+	//if (glm::dot(normal, poly.normal) < 0) {
+	//	std::reverse(poly.vertices.begin(), poly.vertices.end());
+	//}
 
 	return poly;
 }
