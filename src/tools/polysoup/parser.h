@@ -315,6 +315,14 @@ static Face getFace(char* c, int* pos)
 	check(getToken(c, pos), NUMBER);
 	face.yScale = getNumber(c, pos);
 
+	// FIXME: ONLY FOR QUAKE 2 MAPS!
+	check(getToken(c, pos), NUMBER);
+	getNumber(c, pos);
+	check(getToken(c, pos), NUMBER);
+	getNumber(c, pos);
+	check(getToken(c, pos), NUMBER);
+	getNumber(c, pos);
+
 	return face;
 }
 

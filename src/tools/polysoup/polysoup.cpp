@@ -181,7 +181,7 @@ bool isPointValid(Brush brush, glm::vec3 intersectionPoint)
 		Plane plane = convertFaceToPlane(face);
 		glm::vec3 a = glm::normalize(intersectionPoint - plane.p0);
 		float dotProd = glm::dot(plane.n, a);
-		if (glm::dot(plane.n, intersectionPoint) + plane.d > 0.00001f) // FIXME: HOW DO WE GET IT NUMERICALLY GOOD ENOUGH??
+		if (glm::dot(plane.n, intersectionPoint) + plane.d > 0.1f) // FIXME: HOW DO WE GET IT NUMERICALLY GOOD ENOUGH??
 			return false;
 	}
 
@@ -203,8 +203,8 @@ std::vector<Polygon> createPolysoup(Map map)
 						glm::vec3 intersectionPoint;
 						Plane p2 = convertFaceToPlane(*f2);
 						if (intersectThreePlanes(p0, p1, p2, &intersectionPoint)) {
-							//poly.vertices.push_back(intersectionPoint);
 							if (isPointValid(*b, intersectionPoint)) {
+								//poly.vertices.push_back(intersectionPoint);
 								insertVertexToPolygon(intersectionPoint, &poly);
 							}
 						}
@@ -271,12 +271,12 @@ Polygon sortVerticesCCW(Polygon poly)
 		std::swap(poly.vertices[i+1], poly.vertices[smallesAngleIndex]); // Vertex number j+1 has a smaller angle than the one coming befor it -> swap
 	}
 
-	//glm::vec3 a = poly.vertices[1] - poly.vertices[0];
-	//glm::vec3 b = poly.vertices[2] - poly.vertices[0];
-	//glm::vec3 normal = glm::normalize(glm::cross(b, a));
-	//if (glm::dot(normal, poly.normal) < 0) {
-	//	std::reverse(poly.vertices.begin(), poly.vertices.end());
-	//}
+	glm::vec3 a = poly.vertices[2] - poly.vertices[0];
+	glm::vec3 b = poly.vertices[1] - poly.vertices[0];
+	glm::vec3 normal = glm::normalize(glm::cross(b, a));
+	if (glm::dot(normal, poly.normal) < 0) {
+		std::reverse(poly.vertices.begin(), poly.vertices.end());
+	}
 
 	return poly;
 }
