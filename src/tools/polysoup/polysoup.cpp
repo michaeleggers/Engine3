@@ -40,7 +40,7 @@
 #define MAP_PARSER_IMPLEMENTATION
 #include "parser.h"
 
-#define PS_FLOAT_EPSILON	(0.01)
+#define PS_FLOAT_EPSILON	(0.0001)
 
 
 
@@ -269,9 +269,9 @@ Polygon sortVerticesCCW(Polygon poly)
 		// glm::f64vec3 n = glm::normalize(glm::cross(v0, v1));
 		Plane plane = createPlane(center, v0, center + poly.normal);
 
-		size_t smallesAngleIndex = 0;
+		int smallesAngleIndex = 0;
 		double smallestAngle = -1.0;
-		for (size_t j = i+1; j < vertCount-1; j++) {
+		for (size_t j = i+1; j < vertCount; j++) {
 			glm::f64vec3 test = glm::normalize(poly.vertices[j] - center);
 			if (glm::dot(plane.n, test) < -PS_FLOAT_EPSILON) { // check if point is legal
 				double angle = getAngle(center, v0, poly.vertices[j]);
@@ -280,15 +280,15 @@ Polygon sortVerticesCCW(Polygon poly)
 					smallesAngleIndex = j;
 				}
 			}
-		}
-		std::swap(poly.vertices[i+1], poly.vertices[smallesAngleIndex]); // Vertex number j+1 has a smaller angle than the one coming befor it -> swap
+		}	
+		std::swap(poly.vertices[i+1], poly.vertices[smallesAngleIndex]);
 	}
 
 	// Fix winding
 	glm::f64vec3 a = poly.vertices[0] - center;
 	glm::f64vec3 b = poly.vertices[1] - center;
 	glm::f64vec3 normal = glm::normalize(glm::cross(a, b));
-	if (glm::dot(normal, poly.normal) < 0) {
+	if (glm::dot(normal, poly.normal) < PS_FLOAT_EPSILON) {
 		std::reverse(poly.vertices.begin(), poly.vertices.end());
 		poly.normal = normal;
 	}
