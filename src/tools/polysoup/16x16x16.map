@@ -1,0 +1,16 @@
+// Game: Generic
+// Format: Standard
+// entity 0
+{
+"classname" "worldspawn"
+"_tb_textures" "textures"
+// brush 0
+{
+( 0 0 0 ) ( 0 1 0 ) ( 0 0 1 ) techcont2_prpl1 0 0 0 1 1
+( 0 0 0 ) ( 0 0 1 ) ( 1 0 0 ) techcont2_prpl1 0 0 0 1 1
+( 0 0 0 ) ( 1 0 0 ) ( 0 1 0 ) techcont2_prpl1 0 0 0 1 1
+( 16 16 16 ) ( 16 17 16 ) ( 17 16 16 ) techcont2_prpl1 0 0 0 1 1
+( 16 16 16 ) ( 17 16 16 ) ( 16 16 17 ) techcont2_prpl1 0 0 0 1 1
+( 16 16 16 ) ( 16 16 17 ) ( 16 17 16 ) techcont2_prpl1 0 0 0 1 1
+}
+}

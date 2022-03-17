@@ -118,7 +118,7 @@ Plane createPlane(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2)
 	glm::vec3 v0 = p2 - p0;
 	glm::vec3 v1 = p1 - p0;
 	glm::vec3 n = glm::normalize(glm::cross(v0, v1));
-	float d = glm::dot(n, p0);
+	float d = -glm::dot(n, p0);
 
 	return { n, p0, d };
 }
@@ -138,16 +138,16 @@ Plane convertFaceToPlane(Face face)
 
 bool intersectThreePlanes(Plane p0, Plane p1, Plane p2, glm::vec3* intersectionPoint)
 {	
-	glm::vec3 n1xn2 = glm::cross(p0.n, p1.n);
-	float det = glm::dot(n1xn2, p2.n);
+	glm::vec3 n0xn1 = glm::cross(p0.n, p1.n);
+	float det = glm::dot(n0xn1, p2.n);
 
 	if (fabs(det) < PS_FLOAT_EPSILON) // Early out if planes do not intersect at single point
 		return false;
 
 	*intersectionPoint = (
-		p0.d * (glm::cross(p2.n, p1.n))
-		+ p1.d * (glm::cross(p0.n, p2.n))
-		+ p2.d * (glm::cross(p1.n, p0.n))
+		-p0.d * (glm::cross(p1.n, p2.n))
+		-p1.d * (glm::cross(p2.n, p0.n))
+		-p2.d * (glm::cross(p0.n, p1.n))
 		) / det;
 
 	return true;
@@ -181,7 +181,7 @@ bool isPointValid(Brush brush, glm::vec3 intersectionPoint)
 		Plane plane = convertFaceToPlane(face);
 		glm::vec3 a = glm::normalize(intersectionPoint - plane.p0);
 		float dotProd = glm::dot(plane.n, a);
-		if (glm::dot(plane.n, a) > 0)
+		if (glm::dot(plane.n, intersectionPoint) + plane.d > 0.00001f) // FIXME: HOW DO WE GET IT NUMERICALLY GOOD ENOUGH??
 			return false;
 	}
 
@@ -328,7 +328,7 @@ int main(int argc, char** argv)
 
 	std::string mapData = loadTextFile(argv[1]);
 	size_t inputLength = mapData.length();
-	Map map = getMap(&mapData[0], inputLength);
+	Map map = getMap(&mapData[0], inputLength);	
 	std::vector<Polygon> polysoup = createPolysoup(map);
 	std::vector<Polygon> tris = triangulate(polysoup);
 	writePolys("tris.bin", tris);
