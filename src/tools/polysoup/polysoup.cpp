@@ -40,21 +40,21 @@
 #define MAP_PARSER_IMPLEMENTATION
 #include "parser.h"
 
-#define PS_FLOAT_EPSILON	(0.001)
+#define PS_FLOAT_EPSILON	(0.01)
 
 
 
 struct Polygon
 {
-	std::vector<glm::vec3> vertices;
-	glm::vec3			   normal;
+	std::vector<glm::f64vec3> vertices;
+	glm::f64vec3			   normal;
 };
 
 struct Plane
 {
-	glm::vec3 n;
-	glm::vec3 p0;
-	float d;		// = n dot p0. Just for convenience.
+	glm::f64vec3 n;
+	glm::f64vec3 p0;
+	double d;		// = n dot p0. Just for convenience.
 };
 
 static std::string loadTextFile(std::string file)
@@ -83,7 +83,7 @@ static void writePolys(std::string fileName, std::vector<Polygon> polys)
 
 	for (auto p = polys.begin(); p != polys.end(); p++) {
 		for (auto v = p->vertices.begin(); v != p->vertices.end(); v++) {
-			oFileStream.write((char*) & *v, sizeof(glm::vec3));
+			oFileStream.write((char*) & *v, sizeof(glm::f64vec3));
 		}
 	}
 
@@ -113,33 +113,33 @@ static void writePolysOBJ(std::string fileName, std::vector<Polygon> polys)
 	
 }
 
-Plane createPlane(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2)
+Plane createPlane(glm::f64vec3 p0, glm::f64vec3 p1, glm::f64vec3 p2)
 {
-	glm::vec3 v0 = p2 - p0;
-	glm::vec3 v1 = p1 - p0;
-	glm::vec3 n = glm::normalize(glm::cross(v0, v1));
-	float d = -glm::dot(n, p0);
+	glm::f64vec3 v0 = p2 - p0;
+	glm::f64vec3 v1 = p1 - p0;
+	glm::f64vec3 n = glm::normalize(glm::cross(v0, v1));
+	double d = -glm::dot(n, p0);
 
 	return { n, p0, d };
 }
 
-static inline glm::vec3 convertVertexToVec3(Vertex v)
+static inline glm::f64vec3 convertVertexToVec3(Vertex v)
 {
-	return glm::vec3(v.x, v.y, v.z);
+	return glm::f64vec3(v.x, v.y, v.z);
 }
 
 Plane convertFaceToPlane(Face face)
 {
-	glm::vec3 p0 = convertVertexToVec3(face.vertices[0]);
-	glm::vec3 p1 = convertVertexToVec3(face.vertices[1]);
-	glm::vec3 p2 = convertVertexToVec3(face.vertices[2]);
+	glm::f64vec3 p0 = convertVertexToVec3(face.vertices[0]);
+	glm::f64vec3 p1 = convertVertexToVec3(face.vertices[1]);
+	glm::f64vec3 p2 = convertVertexToVec3(face.vertices[2]);
 	return createPlane(p0, p1, p2);
 }
 
-bool intersectThreePlanes(Plane p0, Plane p1, Plane p2, glm::vec3* intersectionPoint)
+bool intersectThreePlanes(Plane p0, Plane p1, Plane p2, glm::f64vec3* intersectionPoint)
 {	
-	glm::vec3 n0xn1 = glm::cross(p0.n, p1.n);
-	float det = glm::dot(n0xn1, p2.n);
+	glm::f64vec3 n0xn1 = glm::cross(p0.n, p1.n);
+	double det = glm::dot(n0xn1, p2.n);
 
 	if (fabs(det) < PS_FLOAT_EPSILON) // Early out if planes do not intersect at single point
 		return false;
@@ -153,13 +153,13 @@ bool intersectThreePlanes(Plane p0, Plane p1, Plane p2, glm::vec3* intersectionP
 	return true;
 }
 
-bool vec3IsEqual(const glm::vec3& lhs, const glm::vec3& rhs) {
+bool vec3IsEqual(const glm::f64vec3& lhs, const glm::f64vec3& rhs) {
 	return ( glm::abs(lhs.x - rhs.x) < PS_FLOAT_EPSILON 
 		&& glm::abs(lhs.y - rhs.y) < PS_FLOAT_EPSILON
 		&& glm::abs(lhs.z - rhs.z) < PS_FLOAT_EPSILON );
 }
 
-void insertVertexToPolygon(glm::vec3 v, Polygon* p)
+void insertVertexToPolygon(glm::f64vec3 v, Polygon* p)
 {
 	auto v0 = p->vertices.begin();
 	if (v0 == p->vertices.end()) {
@@ -176,13 +176,13 @@ void insertVertexToPolygon(glm::vec3 v, Polygon* p)
 	p->vertices.push_back(v);
 }
 
-bool isPointValid(Brush brush, glm::vec3 intersectionPoint)
+bool isPointInsideBrush(Brush brush, glm::f64vec3 intersectionPoint)
 {
 	for (int i = 0; i < brush.faces.size(); i++) {
 		Face face = brush.faces[i];
 		Plane plane = convertFaceToPlane(face);
-		glm::vec3 a = glm::normalize(intersectionPoint - plane.p0);
-		float dotProd = glm::dot(plane.n, a);
+		glm::f64vec3 a = glm::normalize(intersectionPoint - plane.p0);
+		double dotProd = glm::dot(plane.n, a);
 		if (glm::dot(plane.n, intersectionPoint) + plane.d > PS_FLOAT_EPSILON) // FIXME: HOW DO WE GET IT NUMERICALLY GOOD ENOUGH??
 			return false;
 	}
@@ -203,11 +203,11 @@ std::vector<Polygon> createPolysoup(Map map)
 				for (int j = 0; j < faceCount; j++) {
 					Plane p1 = convertFaceToPlane(b->faces[j]);
 					for (int k = 0; k < faceCount; k++) {
-						glm::vec3 intersectionPoint;
+						glm::f64vec3 intersectionPoint;
 						Plane p2 = convertFaceToPlane(b->faces[k]);
 						if (i != k && k != j && i != j) {
 							if (intersectThreePlanes(p0, p1, p2, &intersectionPoint)) {
-								if (isPointValid(*b, intersectionPoint)) {
+								if (isPointInsideBrush(*b, intersectionPoint)) {
 									//poly.vertices.push_back(intersectionPoint);
 									insertVertexToPolygon(intersectionPoint, &poly);
 								}
@@ -224,24 +224,24 @@ std::vector<Polygon> createPolysoup(Map map)
 	return polys;
 }
 
-bool isAngleLegal(glm::vec3 center, glm::vec3 v0, glm::vec3 v1)
+bool isAngleLegal(glm::f64vec3 center, glm::f64vec3 v0, glm::f64vec3 v1)
 {
 	Plane polyPlane = createPlane(center, v0, v1);
-	glm::vec3 b = glm::normalize(v1 - center);
+	glm::f64vec3 b = glm::normalize(v1 - center);
 	Plane p = createPlane(center, v0, center + polyPlane.n);
-	if (glm::dot(p.n, b) < -0.0001) {
+	if (glm::dot(p.n, b) < -0.00001) {
 		return false;
 	}
 
 	return true;
 }
 
-float getAngle(glm::vec3 center, glm::vec3 v0, glm::vec3 v1)
+double getAngle(glm::f64vec3 center, glm::f64vec3 v0, glm::f64vec3 v1)
 {
-	glm::vec3 a = glm::normalize(v0 - center);
-	glm::vec3 b = glm::normalize(v1 - center);
+	glm::f64vec3 a = glm::normalize(v0 - center);
+	glm::f64vec3 b = glm::normalize(v1 - center);
 
-	return glm::acos(glm::dot(a, b));
+	return glm::dot(a, b);
 }
 
 Polygon sortVerticesCCW(Polygon poly)
@@ -253,21 +253,29 @@ Polygon sortVerticesCCW(Polygon poly)
 		return poly; // Actually not a valid polygon
 
 	// Center of poly
-	glm::vec3 center(0.0f);
+	glm::f64vec3 center(0.0f);
 	for (auto v = poly.vertices.begin(); v != poly.vertices.end(); v++) {
 		center += *v;
 	}
 	center /= vertCount;
 
 	size_t closestVertexID = 0;
-	for (size_t i = 0; i < vertCount-3; i++) {
-		glm::vec3 v0 = poly.vertices[i]; // Find next vertex to v0 with smallest angle
+	for (size_t i = 0; i < vertCount-1; i++) {
+		glm::f64vec3 v0 = poly.vertices[i]; // Find next vertex to v0 with smallest angle
+
+		// Plane definition:
+		// glm::f64vec3 v0 = p2 - p0;
+		// glm::f64vec3 v1 = p1 - p0;
+		// glm::f64vec3 n = glm::normalize(glm::cross(v0, v1));
+		Plane plane = createPlane(center, v0, center + poly.normal);
+
 		size_t smallesAngleIndex = 0;
-		float smallestAngle = glm::two_pi<float>();
+		double smallestAngle = -1.0;
 		for (size_t j = i+1; j < vertCount-1; j++) {
-			if (isAngleLegal(center, v0, poly.vertices[j])) {
-				float angle = getAngle(center, v0, poly.vertices[j]);
-				if (angle < smallestAngle) {
+			glm::f64vec3 test = glm::normalize(poly.vertices[j] - center);
+			if (glm::dot(plane.n, test) < -PS_FLOAT_EPSILON) { // check if point is legal
+				double angle = getAngle(center, v0, poly.vertices[j]);
+				if (angle > smallestAngle) {
 					smallestAngle = angle;
 					smallesAngleIndex = j;
 				}
@@ -277,11 +285,12 @@ Polygon sortVerticesCCW(Polygon poly)
 	}
 
 	// Fix winding
-	glm::vec3 a = poly.vertices[1] - poly.vertices[0];
-	glm::vec3 b = poly.vertices[2] - poly.vertices[0];
-	glm::vec3 normal = glm::normalize(glm::cross(a, b));
-	if (glm::dot(normal, poly.normal) < PS_FLOAT_EPSILON) {
+	glm::f64vec3 a = poly.vertices[0] - center;
+	glm::f64vec3 b = poly.vertices[1] - center;
+	glm::f64vec3 normal = glm::normalize(glm::cross(a, b));
+	if (glm::dot(normal, poly.normal) < 0) {
 		std::reverse(poly.vertices.begin(), poly.vertices.end());
+		poly.normal = normal;
 	}
 
 	return poly;
@@ -312,7 +321,7 @@ std::vector<Polygon> triangulate(std::vector<Polygon> polys)
 	for (auto p = polys.begin(); p != polys.end(); p++) {
 		Polygon sortedPoly = sortVerticesCCW(*p);
 		size_t vertCount = sortedPoly.vertices.size();		
-		glm::vec3 provokingVert = sortedPoly.vertices[0];
+		glm::f64vec3 provokingVert = sortedPoly.vertices[0];
 		for (size_t i = 2; i < vertCount; i++) {
 			Polygon poly = { };
 			poly.vertices.push_back(provokingVert);
