@@ -40,7 +40,7 @@
 #define MAP_PARSER_IMPLEMENTATION
 #include "parser.h"
 
-#define PS_FLOAT_EPSILON	(0.0001f)
+#define PS_FLOAT_EPSILON	(0.001)
 
 
 
@@ -154,7 +154,9 @@ bool intersectThreePlanes(Plane p0, Plane p1, Plane p2, glm::vec3* intersectionP
 }
 
 bool vec3IsEqual(const glm::vec3& lhs, const glm::vec3& rhs) {
-	return ( (lhs.x == rhs.x) && (lhs.y == rhs.y) && (lhs.z == rhs.z) );
+	return ( glm::abs(lhs.x - rhs.x) < PS_FLOAT_EPSILON 
+		&& glm::abs(lhs.y - rhs.y) < PS_FLOAT_EPSILON
+		&& glm::abs(lhs.z - rhs.z) < PS_FLOAT_EPSILON );
 }
 
 void insertVertexToPolygon(glm::vec3 v, Polygon* p)
@@ -181,7 +183,7 @@ bool isPointValid(Brush brush, glm::vec3 intersectionPoint)
 		Plane plane = convertFaceToPlane(face);
 		glm::vec3 a = glm::normalize(intersectionPoint - plane.p0);
 		float dotProd = glm::dot(plane.n, a);
-		if (glm::dot(plane.n, intersectionPoint) + plane.d > 0.1f) // FIXME: HOW DO WE GET IT NUMERICALLY GOOD ENOUGH??
+		if (glm::dot(plane.n, intersectionPoint) + plane.d > PS_FLOAT_EPSILON) // FIXME: HOW DO WE GET IT NUMERICALLY GOOD ENOUGH??
 			return false;
 	}
 
@@ -193,19 +195,22 @@ std::vector<Polygon> createPolysoup(Map map)
 	std::vector<Polygon> polys;
 	for (auto e = map.entities.begin(); e != map.entities.end(); e++) {
 		for (auto b = e->brushes.begin(); b != e->brushes.end(); b++) {
-			for (auto f0 = b->faces.begin(); f0 != b->faces.end(); f0++) {
-				Plane p0 = convertFaceToPlane(*f0);
+			int faceCount = b->faces.size();
+			for (int i = 0; i <  faceCount; i++) {
+				Plane p0 = convertFaceToPlane(b->faces[i]);
 				Polygon poly = {};
 				poly.normal = p0.n;
-				for (auto f1 = b->faces.begin(); f1 != b->faces.end(); f1++) {
-					Plane p1 = convertFaceToPlane(*f1);
-					for (auto f2 = b->faces.begin(); f2 != b->faces.end(); f2++) {
+				for (int j = 0; j < faceCount; j++) {
+					Plane p1 = convertFaceToPlane(b->faces[j]);
+					for (int k = 0; k < faceCount; k++) {
 						glm::vec3 intersectionPoint;
-						Plane p2 = convertFaceToPlane(*f2);
-						if (intersectThreePlanes(p0, p1, p2, &intersectionPoint)) {
-							if (isPointValid(*b, intersectionPoint)) {
-								//poly.vertices.push_back(intersectionPoint);
-								insertVertexToPolygon(intersectionPoint, &poly);
+						Plane p2 = convertFaceToPlane(b->faces[k]);
+						if (i != k && k != j && i != j) {
+							if (intersectThreePlanes(p0, p1, p2, &intersectionPoint)) {
+								if (isPointValid(*b, intersectionPoint)) {
+									//poly.vertices.push_back(intersectionPoint);
+									insertVertexToPolygon(intersectionPoint, &poly);
+								}
 							}
 						}
 					}
@@ -224,7 +229,7 @@ bool isAngleLegal(glm::vec3 center, glm::vec3 v0, glm::vec3 v1)
 	Plane polyPlane = createPlane(center, v0, v1);
 	glm::vec3 b = glm::normalize(v1 - center);
 	Plane p = createPlane(center, v0, center + polyPlane.n);
-	if (glm::dot(p.n, b) < 0) {
+	if (glm::dot(p.n, b) < -0.0001) {
 		return false;
 	}
 
@@ -271,10 +276,11 @@ Polygon sortVerticesCCW(Polygon poly)
 		std::swap(poly.vertices[i+1], poly.vertices[smallesAngleIndex]); // Vertex number j+1 has a smaller angle than the one coming befor it -> swap
 	}
 
-	glm::vec3 a = poly.vertices[2] - poly.vertices[0];
-	glm::vec3 b = poly.vertices[1] - poly.vertices[0];
-	glm::vec3 normal = glm::normalize(glm::cross(b, a));
-	if (glm::dot(normal, poly.normal) < 0) {
+	// Fix winding
+	glm::vec3 a = poly.vertices[1] - poly.vertices[0];
+	glm::vec3 b = poly.vertices[2] - poly.vertices[0];
+	glm::vec3 normal = glm::normalize(glm::cross(a, b));
+	if (glm::dot(normal, poly.normal) < PS_FLOAT_EPSILON) {
 		std::reverse(poly.vertices.begin(), poly.vertices.end());
 	}
 
