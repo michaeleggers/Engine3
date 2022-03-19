@@ -1,22 +1,4 @@
-/*
-* Quake MAP parser.
-* 
-* Grammar:
-* ----------------------------------------------------------------
-* Terminals = {key, value, plane, texture, offset, scale, rotation}
-* Non Terminals = {map, entity, property, brush, face}
 
-* map         -> entity *entity
-* entity      -> *property *brush
-* property    -> key value
-* brush       -> *face
-* face        -> plane texture-name xOffset yOffset rotation xScale yScale
-* 
-* A plane is defined by 3 vertices.
-* A property is always a pair of strings.
-* 
-* For more information, see: https://quakewiki.org/wiki/Quake_Map_Format
-*/
 
 
 #include <string>
