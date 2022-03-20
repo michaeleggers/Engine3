@@ -7,6 +7,7 @@
 #include <ostream>
 #include <sstream>
 #include <vector>
+#include <unordered_map>
 #include <set>
 #include <stack>
 #include <algorithm>
@@ -323,9 +324,21 @@ int main(int argc, char** argv)
 		exit(-1);
 	}
 
+	MapVersion mapVersion = QUAKE;
+
+	int arg_ = 1;
+	char** argv_ = argv + 1;
+	while (arg_ < argc) {
+		if (!strcmp("-valve", *argv_)) {
+			mapVersion = VALVE_220;
+			break;
+		}
+		argv_++; arg_++;
+	}
+
 	std::string mapData = loadTextFile(argv[1]);
 	size_t inputLength = mapData.length();
-	Map map = getMap(&mapData[0], inputLength);	
+	Map map = getMap(&mapData[0], inputLength, mapVersion);	
 	std::vector<Polygon> polysoup = createPolysoup(map);
 	std::vector<Polygon> tris = triangulate(polysoup);
 	writePolys("tris.bin", tris);

@@ -29,6 +29,11 @@
 #include <stdlib.h>
 #include <vector>
 
+enum MapVersion
+{
+	QUAKE,
+	VALVE_220
+};
 
 enum TokenType
 {
@@ -36,6 +41,8 @@ enum TokenType
 	RBRACE,
 	LPAREN,
 	RPAREN,
+	LBRACKET,
+	RBRACKET,
 	NUMBER,
 	STRING,
 	COMMENT,
@@ -49,14 +56,6 @@ struct Vertex
 	double x, y, z;
 };
 
-struct TextureData
-{
-	std::string name;
-	double xOffset, yOffset;
-	double rotation;
-	double xScale, yScale;
-};
-
 struct Face
 {
 	Vertex vertices[3];     // Define the plane.
@@ -64,6 +63,11 @@ struct Face
 	double xOffset, yOffset;
 	double rotation;
 	double xScale, yScale;
+
+	// Valve 220 texture format
+	double tx1, ty1, tz1, tOffset1;
+	double tx2, ty2, tz2, tOffset2;
+
 };
 
 struct Brush
@@ -88,7 +92,7 @@ struct Map
 	std::vector<Entity> entities;
 };
 
-Map getMap(char* mapData, size_t mapDataLength);
+Map getMap(char* mapData, size_t mapDataLength, MapVersion mapVersion = QUAKE);
 
 
 
@@ -102,8 +106,9 @@ Map getMap(char* mapData, size_t mapDataLength);
 
 #if defined(MAP_PARSER_IMPLEMENTATION)
 
-static int g_InputLength;
-static int g_LineNo;
+static int			g_InputLength;
+static int			g_LineNo;
+static MapVersion	g_MapVersion;
 
 static int advanceCursor(int* pos, int steps)
 {
@@ -200,6 +205,12 @@ static TokenType getToken(char* c, int* pos)
 	else if (*cur == ')') {
 		result = RPAREN;
 	}
+	else if (*cur == '[') {
+		result = LBRACKET;
+	}
+	else if (*cur == ']') {
+		result = RBRACKET;
+	}
 	else if (*cur == '"') {
 		result = STRING;
 	}
@@ -276,7 +287,7 @@ static double getNumber(char* c, int* pos)
 {
 	char* cur = c + *pos;
 	std::string number = "";
-	while (*cur == '-' || *cur >= '0' && *cur <= '9' || *cur == '.') {
+	while (*cur == '-' || *cur >= '0' && *cur <= '9' || *cur == '.' || *cur == 'e') {
 		number += *cur; cur++; *pos += 1;
 	}
 	return atof(number.c_str());
@@ -306,10 +317,14 @@ static Property getProperty(char* c, int* pos)
 	return { key, value };
 }
 
+/*
+* TODO: getFace and getFaceValve220 are fairly similar. Try to compress this?
+*/
 static Face getFace(char* c, int* pos)
 {
 	Face face = { };
 
+	/* 3 Vertices defining the plane */
 	for (size_t i = 0; i < 3; ++i) {
 		check(getToken(c, pos), LPAREN); *pos += 1;
 		check(getToken(c, pos), NUMBER);
@@ -322,6 +337,7 @@ static Face getFace(char* c, int* pos)
 		face.vertices[i] = { x, y, z };
 	}
 
+	/* Texture stuff */
 	check(getToken(c, pos), TEXNAME);
 	face.textureName = getTextureName(c, pos);
 	check(getToken(c, pos), NUMBER);
@@ -358,12 +374,70 @@ static Face getFace(char* c, int* pos)
 	return face;
 }
 
+static Face getFaceValve220(char* c, int* pos)
+{
+	Face face = { };
+
+	/* 3 Vertices defining the plane */
+	for (size_t i = 0; i < 3; ++i) {
+		check(getToken(c, pos), LPAREN); *pos += 1;
+		check(getToken(c, pos), NUMBER);
+		double x = getNumber(c, pos);
+		check(getToken(c, pos), NUMBER);
+		double y = getNumber(c, pos);
+		check(getToken(c, pos), NUMBER);
+		double z = getNumber(c, pos);
+		check(getToken(c, pos), RPAREN); *pos += 1;
+		face.vertices[i] = { x, y, z };
+	}
+
+	check(getToken(c, pos), TEXNAME);
+	face.textureName = getTextureName(c, pos);
+
+	/* Texture stuff */
+	check(getToken(c, pos), LBRACKET); *pos += 1;
+	check(getToken(c, pos), NUMBER);
+	face.tx1 = getNumber(c, pos);
+	check(getToken(c, pos), NUMBER);
+	face.ty1 = getNumber(c, pos);
+	check(getToken(c, pos), NUMBER);
+	face.tz1 = getNumber(c, pos);
+	check(getToken(c, pos), NUMBER);
+	face.tOffset1 = getNumber(c, pos);
+	check(getToken(c, pos), RBRACKET); *pos += 1;
+
+	check(getToken(c, pos), LBRACKET); *pos += 1;
+	check(getToken(c, pos), NUMBER);
+	face.tx2 = getNumber(c, pos);
+	check(getToken(c, pos), NUMBER);
+	face.ty2 = getNumber(c, pos);
+	check(getToken(c, pos), NUMBER);
+	face.tz2 = getNumber(c, pos);
+	check(getToken(c, pos), NUMBER);
+	face.tOffset2 = getNumber(c, pos);
+	check(getToken(c, pos), RBRACKET); *pos += 1;
+
+	check(getToken(c, pos), NUMBER);
+	face.rotation = getNumber(c, pos);
+	check(getToken(c, pos), NUMBER);
+	face.xScale = getNumber(c, pos);
+	check(getToken(c, pos), NUMBER);
+	face.yScale = getNumber(c, pos);
+
+	return face;
+}
+
 static Brush getBrush(char* c, int* pos)
 {
 	Brush brush = { };
 
 	while (getToken(c, pos) == LPAREN) {
-		brush.faces.push_back(getFace(c, pos));
+		if (g_MapVersion == VALVE_220) {
+			brush.faces.push_back(getFaceValve220(c, pos));
+		}
+		else {
+			brush.faces.push_back(getFace(c, pos));
+		}
 	}
 
 	int faceCount = brush.faces.size();
@@ -397,12 +471,13 @@ static Entity getEntity(char* c, int* pos)
 	return e;
 }
 
-Map getMap(char* mapData, size_t mapDataLength)
+Map getMap(char* mapData, size_t mapDataLength, MapVersion mapVersion)
 {
 	Map map = {};
 
 	g_InputLength = mapDataLength;
 	g_LineNo = 1; // Editors often start at line 1
+	g_MapVersion = mapVersion;
 	int pos = 0;
 	check(getToken(&mapData[0], &pos), LBRACE); // Map file must start with an entity!
 	while (getToken(&mapData[0], &pos) == LBRACE) {
