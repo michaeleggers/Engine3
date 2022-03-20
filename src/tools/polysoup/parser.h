@@ -335,13 +335,25 @@ static Face getFace(char* c, int* pos)
 	check(getToken(c, pos), NUMBER);
 	face.yScale = getNumber(c, pos);
 
-	// FIXME: ONLY FOR QUAKE 2 MAPS!
-	check(getToken(c, pos), NUMBER);
-	getNumber(c, pos);
-	check(getToken(c, pos), NUMBER);
-	getNumber(c, pos);
-	check(getToken(c, pos), NUMBER);
-	getNumber(c, pos);
+	/*
+	* Some map formats do have extra texture information.
+	* There seems to be the Quake2 map format that has 3 additional
+	* numbers. I could not find the specification for those.
+	* So for now, if this is the case (Q2-format) then consume those
+	* numbers and throw them away.
+	* 
+	* TODO: Figure out what those 3 extra numbers are in Q2.
+	*/
+	int *currentPos = pos; // save original (eg. do a lookahead)
+	if (getToken(c, currentPos) == NUMBER) { 
+
+		getToken(c, pos); // if the lookahead returned a NUMBER get the token again to advance pos.
+		getNumber(c, pos);
+		check(getToken(c, pos), NUMBER);
+		getNumber(c, pos);
+		check(getToken(c, pos), NUMBER);
+		getNumber(c, pos);
+	}
 
 	return face;
 }
