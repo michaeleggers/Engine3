@@ -191,7 +191,7 @@ std::vector<Polygon> createPolysoup(Map map)
 						if (i != j != k) {
 							if (intersectThreePlanes(p0, p1, p2, &intersectionPoint)) {
 								if (isPointInsideBrush(*b, intersectionPoint)) {
-									//poly.vertices.push_back(intersectionPoint);
+									// TODO: Calculate texture coordinates
 									insertVertexToPolygon(intersectionPoint, &poly);
 								}
 							}
