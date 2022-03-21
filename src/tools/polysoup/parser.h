@@ -58,16 +58,15 @@ struct Vertex
 
 struct Face
 {
-	Vertex vertices[3];     // Define the plane.
-	std::string textureName;
-	double xOffset, yOffset;
-	double rotation;
-	double xScale, yScale;
+	Vertex			vertices[3];     // Define the plane.
+	std::string		textureName;
+	double			xOffset, yOffset;
+	double			rotation;
+	double			xScale, yScale;
 
 	// Valve 220 texture format
-	double tx1, ty1, tz1, tOffset1;
-	double tx2, ty2, tz2, tOffset2;
-
+	double			tx1, ty1, tz1, tOffset1;
+	double			tx2, ty2, tz2, tOffset2;
 };
 
 struct Brush

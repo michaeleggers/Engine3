@@ -29,7 +29,7 @@
 
 struct Polygon
 {
-	std::vector<glm::f64vec3> vertices;
+	std::vector<glm::f64vec3>  vertices;
 	glm::f64vec3			   normal;
 };
 
@@ -188,7 +188,7 @@ std::vector<Polygon> createPolysoup(Map map)
 					for (int k = 0; k < faceCount; k++) {
 						glm::f64vec3 intersectionPoint;
 						Plane p2 = convertFaceToPlane(b->faces[k]);
-						if (i != k && k != j && i != j) {
+						if (i != j != k) {
 							if (intersectThreePlanes(p0, p1, p2, &intersectionPoint)) {
 								if (isPointInsideBrush(*b, intersectionPoint)) {
 									//poly.vertices.push_back(intersectionPoint);
