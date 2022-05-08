@@ -19,7 +19,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 if(${WINDOWING} STREQUAL "VKAL_SDL")
 	message("Using SDL2...")
 	add_subdirectory(src/dependencies/SDL)
-	# include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/external/SDL)
+	# include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/dependencies/SDL)
 endif()
 
 add_subdirectory(src/dependencies/vkal)

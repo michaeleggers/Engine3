@@ -6,6 +6,7 @@ ADD_SRC_HEADER_FILES()
 include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/../dependencies/vkal
 	${CMAKE_CURRENT_SOURCE_DIR}/../dependencies/SDL/include
+	${CMAKE_CURRENT_SOURCE_DIR}/../Engine
 )
 
 add_library(Game SHARED

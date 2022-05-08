@@ -15,6 +15,7 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
+#include <glm/gtx/quaternion.hpp >
 
 #include <vkal.h>
 
@@ -263,6 +264,7 @@ void Renderer::RenderFrame(std::vector<Player> players, Camera * camera)
 
 	// update view-proj matrices
 	m_ViewProj.viewMat = glm::lookAt(camera->m_Pos, camera->m_Center, camera->m_Up);
+	m_ViewProj.viewMat = camera->ViewMat();
 	m_ViewProj.projMat = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.01f, 1000.0f);
 	//vkal_update_descriptor_set_uniform(m_DescriptorSets[0], m_ViewProjUniform, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
 	vkal_update_uniform(&m_ViewProjUniform, &m_ViewProj);

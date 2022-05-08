@@ -8,6 +8,7 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 #include <string>
 #include <unordered_map>
@@ -110,8 +111,8 @@ static KeyToAction keyMappings[SDL_NUM_SCANCODES] = { };
 void setupKeyMappings()
 {
     // load from config
-    keyMappings[SDL_SCANCODE_UP].action   = MOVE_CAM_BACKWARD; // invert functionality...
-    keyMappings[SDL_SCANCODE_DOWN].action = MOVE_CAM_FORWARD;  // this now pulls camera towards the center.
+    keyMappings[SDL_SCANCODE_UP].action   = MOVE_CAM_FORWARD; 
+    keyMappings[SDL_SCANCODE_DOWN].action = MOVE_CAM_BACKWARD;
     keyMappings[SDL_SCANCODE_LEFT].action = MOVE_CAM_LEFT;
     keyMappings[SDL_SCANCODE_RIGHT].action = MOVE_CAM_RIGHT;
 }
@@ -133,12 +134,13 @@ void MyGame::Update(bool * scancodes)
             if (action != ACTION_NONE) { // TODO: switch
                 if (action == MOVE_CAM_FORWARD)
                     m_Camera->m_Pos += .01f * camForward;
-                if (action == MOVE_CAM_BACKWARD)
-                    m_Camera->m_Pos -= .01f * camForward;
+                //if (action == MOVE_CAM_BACKWARD)
+                //    m_Camera->m_Pos -= .01f * camForward;
+                //m_Camera->ViewMat();
                 if (action == MOVE_CAM_LEFT)
-                    m_Camera->m_Pos -= .1f * camRight;
+                    m_Camera->RotateAroundUp(glm::radians(- 100.0f));
                 if (action == MOVE_CAM_RIGHT)
-                    m_Camera->m_Pos += .1f * camRight;
+                    m_Camera->RotateAroundUp(glm::radians(100.0f));
             }
         }
     }    
