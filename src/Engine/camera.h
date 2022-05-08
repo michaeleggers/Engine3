@@ -12,9 +12,10 @@ public:
 	Camera(glm::vec3 pos) :
 		m_Pos(pos),
 		m_Center(glm::vec3(0)),
-		m_Up(glm::vec3(0, 0, 1)),
-		m_Rotation(glm::quat())
-	{}
+		m_Up(glm::vec3(0, 0, 1))
+	{
+		m_Rotation = glm::quat(glm::vec3(0.0f, 90.0f, 0.0f));
+	}
 
 	void		RotateAroundUp(float angle);
 	glm::mat4	ViewMat();

@@ -138,9 +138,9 @@ void MyGame::Update(bool * scancodes)
                 //    m_Camera->m_Pos -= .01f * camForward;
                 //m_Camera->ViewMat();
                 if (action == MOVE_CAM_LEFT)
-                    m_Camera->RotateAroundUp(glm::radians(- 100.0f));
+                    m_Camera->RotateAroundUp(glm::radians(-10.0f));
                 if (action == MOVE_CAM_RIGHT)
-                    m_Camera->RotateAroundUp(glm::radians(100.0f));
+                    m_Camera->RotateAroundUp(glm::radians(10.0f));
             }
         }
     }    
