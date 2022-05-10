@@ -19,9 +19,11 @@ void Camera::MoveSide(float distance)
 
 void Camera::RotateAroundUp(float angle)
 {
-	m_Rotation = glm::angleAxis(angle, glm::vec3(0.0f, 0.0f, 1.0f));
+	glm::quat q = glm::angleAxis(angle, glm::vec3(0.0f, 0.0f, 1.0f));
 	glm::vec3 forward = glm::normalize(m_Center - m_Pos);
-	forward = glm::rotate(m_Rotation, forward);
+	
+	forward = glm::rotate(q, forward);
+	m_Up = glm::rotate(q, m_Up);
 	m_Center = m_Pos + forward;
 }
 
@@ -29,9 +31,9 @@ void Camera::RotateAroundSide(float angle)
 {
 	glm::vec3 forward = glm::normalize(m_Center - m_Pos);
 	glm::vec3 side = glm::normalize(glm::cross(m_Up, forward));
-	m_Rotation = glm::angleAxis(angle, side);
-	m_Up = glm::rotate(m_Rotation, m_Up);
-	forward = glm::rotate(m_Rotation, forward);
+	glm::quat q = glm::angleAxis(angle, side);
+	m_Up = glm::rotate(q, m_Up);
+	forward = glm::rotate(q, forward);
 	m_Center = m_Pos + forward;
 }
 

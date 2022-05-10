@@ -14,7 +14,7 @@ public:
 		m_Center(glm::vec3(0)),
 		m_Up(glm::vec3(0, 0, 1))
 	{
-		m_Rotation = glm::quat(glm::vec3(0.0f, 90.0f, 0.0f));
+		m_Rotation = glm::quat(0.0f, 0.0f, 0.0f, 1.0f);
 	}
 
 	void		Move(float distance);
