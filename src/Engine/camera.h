@@ -17,6 +17,8 @@ public:
 		m_Rotation = glm::quat(glm::vec3(0.0f, 90.0f, 0.0f));
 	}
 
+	void		Move(float distance);
+	void		MoveSide(float distance);
 	void		RotateAroundUp(float angle);
 	void		RotateAroundSide(float angle);
 	glm::mat4	ViewMat();

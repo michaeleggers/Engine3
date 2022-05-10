@@ -101,6 +101,10 @@ enum Action {
     MOVE_CAM_BACKWARD,
     MOVE_CAM_LEFT,
     MOVE_CAM_RIGHT,
+    ROTATE_CAM_SIDE_FORWARD,
+    ROTATE_CAM_SIDE_BACKWARD,
+    ROTATE_CAM_UP_LEFT,
+    ROTATE_CAM_UP_RIGHT,
     MAX_ACTIONS
 };
 struct KeyToAction {
@@ -111,10 +115,14 @@ static KeyToAction keyMappings[SDL_NUM_SCANCODES] = { };
 void setupKeyMappings()
 {
     // load from config
-    keyMappings[SDL_SCANCODE_UP].action   = MOVE_CAM_FORWARD; 
-    keyMappings[SDL_SCANCODE_DOWN].action = MOVE_CAM_BACKWARD;
-    keyMappings[SDL_SCANCODE_LEFT].action = MOVE_CAM_LEFT;
-    keyMappings[SDL_SCANCODE_RIGHT].action = MOVE_CAM_RIGHT;
+    keyMappings[SDL_SCANCODE_UP].action   = ROTATE_CAM_SIDE_FORWARD; 
+    keyMappings[SDL_SCANCODE_DOWN].action = ROTATE_CAM_SIDE_BACKWARD;
+    keyMappings[SDL_SCANCODE_LEFT].action = ROTATE_CAM_UP_LEFT;
+    keyMappings[SDL_SCANCODE_RIGHT].action = ROTATE_CAM_UP_RIGHT;
+    keyMappings[SDL_SCANCODE_W].action = MOVE_CAM_FORWARD;
+    keyMappings[SDL_SCANCODE_S].action = MOVE_CAM_BACKWARD;
+    keyMappings[SDL_SCANCODE_A].action = MOVE_CAM_LEFT;
+    keyMappings[SDL_SCANCODE_D].action = MOVE_CAM_RIGHT;
 }
 
 Action actionForKey(uint32_t scancode)
@@ -132,15 +140,23 @@ void MyGame::Update(bool * scancodes)
         if (scancodes[scancode]) { 
             Action action = actionForKey(scancode);
             if (action != ACTION_NONE) { // TODO: switch
-                if (action == MOVE_CAM_FORWARD)
-                    m_Camera->RotateAroundSide(glm::radians(-2.0f));
-                if (action == MOVE_CAM_BACKWARD)
+                if (action == ROTATE_CAM_SIDE_FORWARD)
                     m_Camera->RotateAroundSide(glm::radians(2.0f));
-                m_Camera->ViewMat();
-                if (action == MOVE_CAM_LEFT)
-                    m_Camera->RotateAroundUp(glm::radians(-2.0f));
-                if (action == MOVE_CAM_RIGHT)
+                if (action == ROTATE_CAM_SIDE_BACKWARD)
+                    m_Camera->RotateAroundSide(glm::radians(-2.0f));
+                if (action == ROTATE_CAM_UP_LEFT)
                     m_Camera->RotateAroundUp(glm::radians(2.0f));
+                if (action == ROTATE_CAM_UP_RIGHT)
+                    m_Camera->RotateAroundUp(glm::radians(-2.0f));
+
+                if (action == MOVE_CAM_FORWARD)
+                    m_Camera->Move(0.25f);
+                if (action == MOVE_CAM_BACKWARD)
+                    m_Camera->Move(-0.255f);
+                if (action == MOVE_CAM_LEFT)
+                    m_Camera->MoveSide(0.25f);
+                if (action == MOVE_CAM_RIGHT)
+                    m_Camera->MoveSide(-0.25);
             }
         }
     }    
