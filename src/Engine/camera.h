@@ -18,6 +18,7 @@ public:
 	}
 
 	void		RotateAroundUp(float angle);
+	void		RotateAroundSide(float angle);
 	glm::mat4	ViewMat();
 
 	glm::vec3 m_Pos;

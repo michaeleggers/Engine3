@@ -133,14 +133,14 @@ void MyGame::Update(bool * scancodes)
             Action action = actionForKey(scancode);
             if (action != ACTION_NONE) { // TODO: switch
                 if (action == MOVE_CAM_FORWARD)
-                    m_Camera->m_Pos += .01f * camForward;
-                //if (action == MOVE_CAM_BACKWARD)
-                //    m_Camera->m_Pos -= .01f * camForward;
-                //m_Camera->ViewMat();
+                    m_Camera->RotateAroundSide(glm::radians(-2.0f));
+                if (action == MOVE_CAM_BACKWARD)
+                    m_Camera->RotateAroundSide(glm::radians(2.0f));
+                m_Camera->ViewMat();
                 if (action == MOVE_CAM_LEFT)
-                    m_Camera->RotateAroundUp(glm::radians(-10.0f));
+                    m_Camera->RotateAroundUp(glm::radians(-2.0f));
                 if (action == MOVE_CAM_RIGHT)
-                    m_Camera->RotateAroundUp(glm::radians(10.0f));
+                    m_Camera->RotateAroundUp(glm::radians(2.0f));
             }
         }
     }    
