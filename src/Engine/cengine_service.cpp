@@ -23,6 +23,7 @@ Player * CEngineService::CreatePlayer(glm::vec3 startPos, std::string model)
     
     player.animModel = modelData;
     player.modelName = model;
+    player.pos = startPos;
     m_Players.push_back(player);
 
     return &m_Players.back();

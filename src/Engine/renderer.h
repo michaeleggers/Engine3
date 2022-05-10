@@ -31,6 +31,11 @@ struct VertexFormatAnimatedModel
 	glm::vec2 uv;
 };
 
+struct AnimatedModel_UB
+{
+	glm::mat4 modelMat;
+};
+
 struct ViewProj
 {
 	glm::mat4 viewMat;
@@ -46,25 +51,26 @@ public:
 		m_ExePath = SDL_GetBasePath();
 	}
 
-	void			Init(SDL_Window* window);
-	void			CreateAnimatedModelPipeline(std::string vertShaderFile, std::string fragShaderFile);
-	AnimatedModel   RegisterModel(std::string model);
-	void			RenderFrame(std::vector<Player> players, Camera * camera);
+	void											Init(SDL_Window* window);
+	void											CreateAnimatedModelPipeline(std::string vertShaderFile, std::string fragShaderFile);
+	AnimatedModel									RegisterModel(std::string model);
+	void											RenderFrame(std::vector<Player> players, Camera * camera);
 
-	SDL_Window*			m_Window;
+	SDL_Window*										m_Window;
 
-	VkalInfo*			m_VkalInfo;
-	VkPipeline			m_animatedModelPipeline;
-	VkPipelineLayout	m_animatedModelLayout;
-	std::vector<VkDescriptorSet> m_DescriptorSets;
+	VkalInfo*										m_VkalInfo;
+	VkPipeline										m_animatedModelPipeline;
+	VkPipelineLayout								m_animatedModelLayout;
+	std::vector<VkDescriptorSet>					m_DescriptorSets;
 
-	std::string			m_ExePath;
-	std::string			m_relAssetPath;
+	std::string										m_ExePath;
+	std::string										m_relAssetPath;
 
-	std::unordered_map<std::string, AnimatedModel> m_AnimatedModels;
+	std::unordered_map<std::string, AnimatedModel>	m_AnimatedModels;
+	UniformBuffer									m_AnimatedModelUB;
 
-	ViewProj			m_ViewProj;
-	UniformBuffer		m_ViewProjUniform; // TODO: type should be VkalUniformBuffer
+	ViewProj										m_ViewProj;
+	UniformBuffer									m_ViewProjUniform; // TODO: type should be called VkalUniformBuffer
 };
 
 #endif

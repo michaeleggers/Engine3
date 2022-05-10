@@ -16,6 +16,11 @@ layout (set = 0, binding = 0) uniform ViewProj_t
     mat4  proj;
 } u_view_proj;
 
+layout (set = 0, binding = 1) uniform Data_t
+{
+    mat4 model;
+} u_data;
+
 // const mat4 blender2engine = mat4(
 //     1, 0, 0, 0,
 //     0, 0, 1, 0,
@@ -27,6 +32,6 @@ void main()
 {
     out_uv = uv;
     out_normal = normal;
-	gl_Position = u_view_proj.proj * u_view_proj.view * vec4(position, 1.0);
+	gl_Position = u_view_proj.proj * u_view_proj.view * u_data.model * vec4(position, 1.0);
     gl_Position.y = -gl_Position.y; // Hack: vulkan's y is down
 }

@@ -124,9 +124,16 @@ void Renderer::CreateAnimatedModelPipeline(std::string vertShaderFile, std::stri
 			1,
 			VK_SHADER_STAGE_VERTEX_BIT,
 			0
+		},
+		{
+			1,
+			VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+			1,
+			VK_SHADER_STAGE_VERTEX_BIT,
+			0
 		}
 	};
-	VkDescriptorSetLayout descriptor_set_layout = vkal_create_descriptor_set_layout(set_layout, 1);
+	VkDescriptorSetLayout descriptor_set_layout = vkal_create_descriptor_set_layout(set_layout, 2);
 
 	VkDescriptorSetLayout layouts[] = {
 		descriptor_set_layout
@@ -153,8 +160,14 @@ void Renderer::CreateAnimatedModelPipeline(std::string vertShaderFile, std::stri
 	m_animatedModelPipeline = graphics_pipeline;
 
 	/* Update Descriptor Sets */
+	/* ViewProjUniform should maybe be in Init(), because it applies to the whole frame. */
 	m_ViewProjUniform = vkal_create_uniform_buffer(sizeof(ViewProj), 1, 0);
 	vkal_update_descriptor_set_uniform(m_DescriptorSets[0], m_ViewProjUniform, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+
+	m_AnimatedModelUB = vkal_create_uniform_buffer(sizeof(AnimatedModel_UB), 1, 1);
+	vkal_update_descriptor_set_uniform(m_DescriptorSets[0], m_AnimatedModelUB, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+	
+
 }
 
 static std::string loadTextFile(std::string file)
@@ -263,7 +276,6 @@ void Renderer::RenderFrame(std::vector<Player> players, Camera * camera)
 	SDL_GetWindowSize(m_Window, &width, &height);
 
 	// update view-proj matrices
-	m_ViewProj.viewMat = glm::lookAt(camera->m_Pos, camera->m_Center, camera->m_Up);
 	m_ViewProj.viewMat = camera->ViewMat();
 	m_ViewProj.projMat = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.01f, 1000.0f);
 	//vkal_update_descriptor_set_uniform(m_DescriptorSets[0], m_ViewProjUniform, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
@@ -272,13 +284,13 @@ void Renderer::RenderFrame(std::vector<Player> players, Camera * camera)
 	{
 		//vkDeviceWaitIdle(vkal_info->device);
 		uint32_t image_id = vkal_get_image();
+		
 
 		VkCommandBuffer currentCmdBuffer = m_VkalInfo->default_command_buffers[image_id];
 
 		vkal_set_clear_color({ 0.2f, 0.2f, 0.2f, 1.0f });
 
 		vkal_begin_command_buffer(image_id);
-		vkal_begin_render_pass(image_id, m_VkalInfo->render_pass);
 		vkal_viewport(currentCmdBuffer,
 			0, 0,
 			(float)width, (float)height);
@@ -286,9 +298,18 @@ void Renderer::RenderFrame(std::vector<Player> players, Camera * camera)
 			0, 0,
 			(float)width, (float)height);
 
+		vkal_begin_render_pass(image_id, m_VkalInfo->render_pass);
+
+		vkCmdBindPipeline(currentCmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_animatedModelPipeline);
 		vkal_bind_descriptor_set(image_id, &m_DescriptorSets[0], m_animatedModelLayout);
 		for (int i = 0; i < players.size(); ++i) {
+			
 			Player player = players[i];
+
+			AnimatedModel_UB onTheFlyBuffer;
+			onTheFlyBuffer.modelMat = glm::translate(glm::mat4(1), player.pos);
+			vkal_update_uniform(&m_AnimatedModelUB, &onTheFlyBuffer); // TODO: Doesn't work within same cmd buffer. Use push constants or dynamic uniform buffer
+
 			vkal_draw_indexed(image_id, m_animatedModelPipeline,
 				player.animModel.indexOffset, player.animModel.indexCount,
 				player.animModel.vertexOffset);

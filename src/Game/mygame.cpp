@@ -88,8 +88,8 @@ void MyGame::OnEngineInitialized(void)
     printf("FROM GAME DLL: Engine Initialized! Ready to GO!\n");
     engineService->DebugOut(L"From MyGame: Hellohoooo");
 
-    Player * player = engineService->CreatePlayer(glm::vec3(0), "models/policeman.gpmesh");
-    Player* player2 = engineService->CreatePlayer(glm::vec3(0), "models/policeman.gpmesh");
+    Player * player = engineService->CreatePlayer(glm::vec3(-2.0f, 0.0f, 0.0f), "models/policeman.gpmesh");
+    Player* player2 = engineService->CreatePlayer(glm::vec3(5.0f, 0.0f, 0.0f), "models/policeman.gpmesh");
     m_Camera = engineService->CreateCamera(glm::vec3(2.0f, -2.0f, 4.0f));
 
 }
