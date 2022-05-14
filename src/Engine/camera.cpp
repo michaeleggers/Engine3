@@ -20,21 +20,31 @@ void Camera::MoveSide(float distance)
 void Camera::RotateAroundUp(float angle)
 {
 	glm::quat q = glm::angleAxis(angle, glm::vec3(0.0f, 0.0f, 1.0f));
-	glm::vec3 forward = glm::normalize(m_Center - m_Pos);
 	
-	forward = glm::rotate(q, forward);
+	m_Forward = glm::rotate(q, m_Forward);
 	m_Up = glm::rotate(q, m_Up);
-	m_Center = m_Pos + forward;
-}
+	m_Center = m_Pos + m_Forward;
+
+	m_Orientation = q * m_Orientation;
+} 
 
 void Camera::RotateAroundSide(float angle)
 {
-	glm::vec3 forward = glm::normalize(m_Center - m_Pos);
-	glm::vec3 side = glm::normalize(glm::cross(m_Up, forward));
+	glm::vec3 side = glm::normalize(glm::cross(m_Up, m_Forward));
 	glm::quat q = glm::angleAxis(angle, side);
 	m_Up = glm::rotate(q, m_Up);
-	forward = glm::rotate(q, forward);
-	m_Center = m_Pos + forward;
+	m_Forward = glm::rotate(q, m_Forward);
+	m_Center = m_Pos + m_Forward;
+	
+	m_Orientation = q * m_Orientation;
+}
+
+void Camera::ResetOrientation(void)
+{
+	m_Up = glm::rotate(m_InitOrientation, glm::vec3(0, 0, 1)); // in our (right-handed) coordinate system, up is +z and forward is +y
+	m_Forward = glm::rotate(m_InitOrientation, glm::vec3(0, 1, 0));
+	m_Pos = m_InitPos;
+	m_Center = m_Pos + m_Forward;
 }
 
 glm::mat4 Camera::ViewMat()

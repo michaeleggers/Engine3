@@ -88,9 +88,9 @@ void MyGame::OnEngineInitialized(void)
     printf("FROM GAME DLL: Engine Initialized! Ready to GO!\n");
     engineService->DebugOut(L"From MyGame: Hellohoooo");
 
-    Player * player = engineService->CreatePlayer(glm::vec3(-2.0f, 0.0f, 0.0f), "models/policeman.gpmesh");
-    Player* player2 = engineService->CreatePlayer(glm::vec3(5.0f, 0.0f, 0.0f), "models/policeman.gpmesh");
-    m_Camera = engineService->CreateCamera(glm::vec3(2.0f, -2.0f, 4.0f));
+    Player * player = engineService->CreatePlayer(glm::vec3(0.0f, 0.0f, 0.0f), "models/policeman.gpmesh");
+    //Player* player2 = engineService->CreatePlayer(glm::vec3(0.0f, 0.0f, 0.0f), "models/policeman.gpmesh");
+    m_Camera = engineService->CreateCamera(glm::vec3(2.0f, -2.0f, 5.0f));
 
 }
 
@@ -105,6 +105,7 @@ enum Action {
     ROTATE_CAM_SIDE_BACKWARD,
     ROTATE_CAM_UP_LEFT,
     ROTATE_CAM_UP_RIGHT,
+    RESET_CAM,
     MAX_ACTIONS
 };
 struct KeyToAction {
@@ -123,6 +124,7 @@ void setupKeyMappings()
     keyMappings[SDL_SCANCODE_S].action = MOVE_CAM_BACKWARD;
     keyMappings[SDL_SCANCODE_A].action = MOVE_CAM_LEFT;
     keyMappings[SDL_SCANCODE_D].action = MOVE_CAM_RIGHT;
+    keyMappings[SDL_SCANCODE_R].action = RESET_CAM;
 }
 
 Action actionForKey(uint32_t scancode)
@@ -157,6 +159,9 @@ void MyGame::Update(bool * scancodes)
                     m_Camera->MoveSide(0.25f);
                 if (action == MOVE_CAM_RIGHT)
                     m_Camera->MoveSide(-0.25);
+
+                if (action == RESET_CAM)
+                    m_Camera->ResetOrientation();
             }
         }
     }    
