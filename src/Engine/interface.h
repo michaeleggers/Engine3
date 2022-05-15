@@ -10,6 +10,12 @@
 #include "player.h"
 #include "camera.h"
 
+struct e3Input 
+{
+    bool scancodes[SDL_NUM_SCANCODES];
+    bool mouseButtonID[256];
+};
+
 class IEngineService
 {
 public:
@@ -26,9 +32,8 @@ class IGameClient
 {
 public:
     virtual void		OnEngineInitialized(void) = 0;
-    virtual void		Update(bool * scancodes) = 0;
+    virtual void		Update(e3Input input) = 0;
 };
-
 
 
 typedef IGameClient * (*PFN_GET_GAME_CLIENT)(IEngineService * pEngineService);

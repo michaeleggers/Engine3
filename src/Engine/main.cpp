@@ -97,7 +97,7 @@ int main(int argc, char** argv)
     gameClient->OnEngineInitialized();
 
     // Loop
-    bool scancodes[SDL_NUM_SCANCODES] = { false };
+    e3Input input = { {false}, {false} };
     bool running = true;
     while (running) {
 
@@ -108,19 +108,24 @@ int main(int argc, char** argv)
         }
         
         if (event.key.type == SDL_KEYDOWN) {
-            scancodes[event.key.keysym.scancode] = true;
+            input.scancodes[event.key.keysym.scancode] = true;
         }
         else if (event.key.type == SDL_KEYUP) {
-            scancodes[event.key.keysym.scancode] = false;
+            input.scancodes[event.key.keysym.scancode] = false;
+        }
+        else if (event.type == SDL_MOUSEBUTTONDOWN) {
+            input.mouseButtonID[event.button.button] = true;        
+        }
+        else if (event.type == SDL_MOUSEBUTTONUP) {
+            input.mouseButtonID[event.button.button] = false;
         }
 
         switch (event.key.keysym.scancode) 
         {
-            case (SDL_SCANCODE_ESCAPE): { running = false; } break;
-            
+            case (SDL_SCANCODE_ESCAPE): { running = false; } break;            
         }
         
-        gameClient->Update(scancodes);
+        gameClient->Update(input);
 
         engineService->RenderFrame();
     }

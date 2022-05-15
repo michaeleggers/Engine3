@@ -73,7 +73,7 @@ public:
 
 	// Overrides from Interface
     void OnEngineInitialized(void);
-    void Update(bool * scancodes);
+    void Update(e3Input input);
 
     Camera* m_Camera;
 };
@@ -132,14 +132,14 @@ Action actionForKey(uint32_t scancode)
     return keyMappings[scancode].action;
 }
 
-void MyGame::Update(bool * scancodes)
+void MyGame::Update(e3Input input)
 {
     setupKeyMappings(); // TODO: setup once.
     glm::vec3 camForward = glm::normalize(m_Camera->m_Center - m_Camera->m_Pos);
     glm::vec3 camRight = glm::normalize(glm::cross(camForward, m_Camera->m_Up));
 
     for (uint32_t scancode = 0; scancode < SDL_NUM_SCANCODES; ++scancode) { // TODO: really need to iterate over all of these every frame?
-        if (scancodes[scancode]) { 
+        if (input.scancodes[scancode]) { 
             Action action = actionForKey(scancode);
             if (action != ACTION_NONE) { // TODO: switch
                 if (action == ROTATE_CAM_SIDE_FORWARD)
@@ -164,7 +164,13 @@ void MyGame::Update(bool * scancodes)
                     m_Camera->ResetOrientation();
             }
         }
-    }    
+    }
+
+    for (Uint8 mouseID = 0; mouseID < 255; mouseID++) {
+        if (input.mouseButtonID[mouseID]) {
+            SDL_Log("mouseID: %d\n", mouseID);
+        }
+    }
 }
 
 
