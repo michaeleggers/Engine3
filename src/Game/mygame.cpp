@@ -73,7 +73,7 @@ public:
 
 	// Overrides from Interface
     void OnEngineInitialized(void);
-    void Update(e3Input input);
+    void Update(float dt, e3Input input);
 
     Camera* m_Camera;
 };
@@ -132,8 +132,11 @@ Action actionForKey(uint32_t scancode)
     return keyMappings[scancode].action;
 }
 
-void MyGame::Update(e3Input input)
+void MyGame::Update(float dt, e3Input input)
 {
+    SDL_Log("Frametime: %f\n", dt);
+    //dt /= 1000.0f;
+
     setupKeyMappings(); // TODO: setup once.
     glm::vec3 camForward = glm::normalize(m_Camera->m_Center - m_Camera->m_Pos);
     glm::vec3 camRight = glm::normalize(glm::cross(camForward, m_Camera->m_Up));
@@ -143,22 +146,22 @@ void MyGame::Update(e3Input input)
             Action action = actionForKey(scancode);
             if (action != ACTION_NONE) { // TODO: switch
                 if (action == ROTATE_CAM_SIDE_FORWARD)
-                    m_Camera->RotateAroundSide(glm::radians(2.0f));
+                    m_Camera->RotateAroundSide(dt * glm::radians(0.07f));
                 if (action == ROTATE_CAM_SIDE_BACKWARD)
-                    m_Camera->RotateAroundSide(glm::radians(-2.0f));
+                    m_Camera->RotateAroundSide(dt * glm::radians(-0.07f));
                 if (action == ROTATE_CAM_UP_LEFT)
-                    m_Camera->RotateAroundUp(glm::radians(2.0f));
+                    m_Camera->RotateAroundUp(dt * glm::radians(0.07f));
                 if (action == ROTATE_CAM_UP_RIGHT)
-                    m_Camera->RotateAroundUp(glm::radians(-2.0f));
+                    m_Camera->RotateAroundUp(dt * glm::radians(-0.07f));
 
                 if (action == MOVE_CAM_FORWARD)
-                    m_Camera->Move(0.25f);
+                    m_Camera->Move(dt * 0.025f);
                 if (action == MOVE_CAM_BACKWARD)
-                    m_Camera->Move(-0.255f);
+                    m_Camera->Move(dt * (-0.025f));
                 if (action == MOVE_CAM_LEFT)
-                    m_Camera->MoveSide(0.25f);
+                    m_Camera->MoveSide(dt * 0.025f);
                 if (action == MOVE_CAM_RIGHT)
-                    m_Camera->MoveSide(-0.25);
+                    m_Camera->MoveSide(dt * (-0.025));
 
                 if (action == RESET_CAM)
                     m_Camera->ResetOrientation();
@@ -171,6 +174,8 @@ void MyGame::Update(e3Input input)
             SDL_Log("mouseID: %d\n", mouseID);
         }
     }
+
+    
 }
 
 

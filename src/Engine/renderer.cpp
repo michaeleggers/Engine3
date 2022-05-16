@@ -272,6 +272,7 @@ AnimatedModel Renderer::RegisterModel(std::string model) // TODO: check if model
 //       For now just the player.
 void Renderer::RenderFrame(std::vector<Player> players, Camera * camera)
 {
+
 	int width, height;
 	SDL_GetWindowSize(m_Window, &width, &height);
 
@@ -321,5 +322,6 @@ void Renderer::RenderFrame(std::vector<Player> players, Camera * camera)
 		vkal_queue_submit(&currentCmdBuffer, 1);
 
 		vkal_present(image_id);
+
 	}
 }

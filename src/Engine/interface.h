@@ -32,7 +32,7 @@ class IGameClient
 {
 public:
     virtual void		OnEngineInitialized(void) = 0;
-    virtual void		Update(e3Input input) = 0;
+    virtual void		Update(float dt, e3Input input) = 0;
 };
 
 

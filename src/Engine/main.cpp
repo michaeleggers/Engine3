@@ -99,7 +99,12 @@ int main(int argc, char** argv)
     // Loop
     e3Input input = { {false}, {false} };
     bool running = true;
+    Uint64 startTime = 0;
+    Uint64 endTime = 0;
+    float frameTime = 0.0f;
     while (running) {
+
+        startTime = SDL_GetTicks64();
 
         SDL_Event event;
         SDL_PollEvent(&event);
@@ -125,9 +130,13 @@ int main(int argc, char** argv)
             case (SDL_SCANCODE_ESCAPE): { running = false; } break;            
         }
         
-        gameClient->Update(input);
+        gameClient->Update(frameTime, input);
 
         engineService->RenderFrame();
+
+        Uint64 endTime = SDL_GetTicks64();
+
+        frameTime = float(endTime - startTime);
     }
 
     delete renderer;
