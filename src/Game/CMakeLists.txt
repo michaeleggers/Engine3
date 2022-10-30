@@ -12,6 +12,8 @@ include_directories(
 add_library(Game SHARED
 	${SRC_FILES}
 	${HEADER_FILES}
+	../Engine/camera.h
+	../Engine/camera.cpp
 	exports.def)
 	
 target_include_directories(Game
