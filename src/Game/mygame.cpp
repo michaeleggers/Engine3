@@ -127,9 +127,9 @@ void setupKeyMappings()
     keyMappings[SDL_SCANCODE_R].action = RESET_CAM;
 }
 
-Action actionForKey(uint32_t scancode)
+Action actionForKey(e3Input input)
 {
-    return keyMappings[scancode].action;
+    return keyMappings[input.scancodes[]].action;
 }
 
 void MyGame::Update(float dt, e3Input input)
@@ -141,9 +141,9 @@ void MyGame::Update(float dt, e3Input input)
     glm::vec3 camForward = glm::normalize(m_Camera->m_Center - m_Camera->m_Pos);
     glm::vec3 camRight = glm::normalize(glm::cross(camForward, m_Camera->m_Up));
 
-    for (uint32_t scancode = 0; scancode < SDL_NUM_SCANCODES; ++scancode) { // TODO: really need to iterate over all of these every frame?
-        if (input.scancodes[scancode]) { 
-            Action action = actionForKey(scancode);
+    //for (uint32_t scancode = 0; scancode < SDL_NUM_SCANCODES; ++scancode) { // TODO: really need to iterate over all of these every frame?
+        //if (input.scancodes[scancode]) { 
+            Action action = actionForKey(input);
             if (action != ACTION_NONE) { // TODO: switch
                 if (action == ROTATE_CAM_SIDE_FORWARD)
                     m_Camera->RotateAroundSide(dt * glm::radians(0.07f));
@@ -166,8 +166,8 @@ void MyGame::Update(float dt, e3Input input)
                 if (action == RESET_CAM)
                     m_Camera->ResetOrientation();
             }
-        }
-    }
+        //}
+    //}
 
     for (Uint8 mouseID = 0; mouseID < 255; mouseID++) {
         if (input.mouseButtonID[mouseID]) {

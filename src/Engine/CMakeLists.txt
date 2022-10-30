@@ -5,7 +5,7 @@ ADD_SRC_HEADER_FILES()
 
 include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/../dependencies/vkal
-	${CMAKE_CURRENT_SOURCE_DIR}/../dependencies/SDL/include
+	# ${CMAKE_CURRENT_SOURCE_DIR}/../dependencies/SDL/include
 )
 
 add_executable(Engine3
@@ -19,5 +19,6 @@ target_include_directories(Engine3
 
 target_link_libraries(Engine3
 	PUBLIC vkal
-	PUBLIC SDL2
-	PUBLIC SDL2main)
+	# PUBLIC SDL2
+	# PUBLIC SDL2main
+)
