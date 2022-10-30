@@ -1,3 +1,6 @@
 [submodule "src/dependencies/SDL"]
 	path = src/dependencies/SDL
 	url = https://github.com/libsdl-org/SDL
+[submodule "src/dependencies/vkal"]
+	path = src/dependencies/vkal
+	url = https://github.com/michaeleggers/vkal
