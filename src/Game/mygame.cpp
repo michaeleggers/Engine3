@@ -94,7 +94,7 @@ static IEngineService* engineService;
 
 void MyGame::OnEngineInitialized(void)
 {
-    printf("FROM GAME DLL: Engine Initialized! Ready to GO!\n");
+    printf("FROM GAME DLL: Engine Initialized! Ready to GOOOoo!\n");
     engineService->DebugOut(L"From MyGame: Hellohoooo");
 
     Player* player

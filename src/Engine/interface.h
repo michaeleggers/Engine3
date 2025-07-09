@@ -4,25 +4,35 @@
 #include <stdint.h>
 #include <string>
 
-#include <glm/glm.hpp>
 #include <glm/ext.hpp>
+#include <glm/glm.hpp>
 
-#include "player.h"
 #include "camera.h"
+#include "player.h"
 
-struct e3Input 
+#if defined(_WIN32) || defined(_WIN64)
+#ifdef MYLIB_EXPORTS
+#define GAME_API __declspec(dllexport)
+#else
+#define GAME_API __declspec(dllimport)
+#endif
+#else
+#define GAME_API __attribute__((visibility("default")))
+#endif
+
+struct e3Input
 {
-    bool scancodes[SDL_NUM_SCANCODES];
-    bool mouseButtonID[256];
+    bool scancodes[ SDL_NUM_SCANCODES ];
+    bool mouseButtonID[ 256 ];
 };
 
 class IEngineService
 {
-public:
-    virtual void		DebugOut(wchar_t const * str)    = 0;
-    virtual Player*     CreatePlayer(glm::vec3 startPos, std::string model) = 0;
-    virtual Camera*     CreateCamera(glm::vec3 pos) = 0;
-     virtual void       RenderFrame() = 0;
+  public:
+    virtual void    DebugOut(wchar_t const* str)                        = 0;
+    virtual Player* CreatePlayer(glm::vec3 startPos, std::string model) = 0;
+    virtual Camera* CreateCamera(glm::vec3 pos)                         = 0;
+    virtual void    RenderFrame()                                       = 0;
 };
 
 // GameDLL must implement this, so the engine can call into
@@ -30,29 +40,22 @@ public:
 // ready and the game can start loading a level or whatever...
 class IGameClient
 {
-public:
-    virtual void		OnEngineInitialized(void) = 0;
-    virtual void		Update(float dt, e3Input input) = 0;
+  public:
+    virtual void OnEngineInitialized(void)       = 0;
+    virtual void Update(float dt, e3Input input) = 0;
 };
 
+typedef IGameClient* (*PFN_GET_GAME_CLIENT)(IEngineService* pEngineService);
 
-typedef IGameClient * (*PFN_GET_GAME_CLIENT)(IEngineService * pEngineService);
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#define EXPORT_GAME_CLIENT(GameClientImpl, gameClient, engineService)\
-    IGameClient * GetGameClient(IEngineService * engineServiceFromEXE) {\
-    engineService = engineServiceFromEXE;\
-    gameClient = new GameClientImpl();\
-    return gameClient;\
-    }\
-
-#ifdef __cplusplus
-}
-#endif
-
-
+#define EXPORT_GAME_CLIENT(GameClientImpl, gameClient, engineService)                                                  \
+    extern "C"                                                                                                         \
+    {                                                                                                                  \
+        GAME_API IGameClient* GetGameClient(IEngineService* engineServiceFromEXE)                                      \
+        {                                                                                                              \
+            engineService = engineServiceFromEXE;                                                                      \
+            gameClient    = new GameClientImpl();                                                                      \
+            return gameClient;                                                                                         \
+        }                                                                                                              \
+    }
 
 #endif
