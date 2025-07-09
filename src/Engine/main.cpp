@@ -81,7 +81,7 @@ int main(int argc, char** argv)
     }
 
     // Init Engine system(s)
-    Renderer* renderer = new Renderer("../data/");
+    Renderer* renderer = new Renderer("/data/"); // TODO: Set base-path properly via command-line or default to exe-dir.
     renderer->Init(window);
 
     // TODO: Pipelinecreation somewhere else and more 'generic'?

@@ -63,6 +63,8 @@ void Renderer::Init(SDL_Window* window)
 
 static std::vector<uint8_t> loadBinaryFile(std::string file)
 {
+    printf("Reading binary file: %s\n", file.c_str());
+
     // TODO: Use SDL_RWFromFile instead of stdio's FILE and fopen?
     FILE* hFile = fopen(file.c_str(), "rb");
     SDL_assert_always(hFile != NULL);
